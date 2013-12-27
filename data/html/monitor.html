@@ -1,0 +1,95 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Title</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+</head>
+
+<body>
+  <div class="content">
+    <div class="error hidden">Katastrofe! Får ikke kontakt med serveren!</div>
+    <h2>Overvåking av automater og SIP-transaksjoner</h2>
+    <form class="metrics">
+      <fieldset class="left">
+        <legend>Automathub</legend>
+        <label>Oppetid</label><input id="metric-uptime" class="input-long" disabled="disabled" value="" /><br/>
+        <label>PID</label><input id="metric-pid" class="input-short" disabled="disabled" value="" /><br/>
+      </fieldset>
+
+      <fieldset class="left">
+        <legend>Automater</legend>
+        <label>Antall tilkoblede</label><input id="metric-connected" class="input-short" disabled="disabled" value="" /><br/>
+        <label>Antall kjente</label><input id="metric-known" class="input-short"  disabled="disabled" value="" /><br/>
+      </fieldset>
+    </form>
+
+    <div class="clearfix"></div>
+
+    <form class="metrics">
+      <fieldset class="left">
+        <legend>Gjennomsnittsmålinger</legend>
+        <label>Transkasjonstid</label><input class="input-short" disabled="disabled" value="" /><br/>
+        <label>SIP-transaksjonstid</label><input class="input-short" disabled="disabled" value="" /><br/>
+      </fieldset>
+
+      <fieldset class="left">
+        <legend>Akumulerte målinger (siste 60min)</legend>
+        <label>Antall avbrutte tilkoblinger</label><input class="input-short" disabled="disabled" value="" /><br/>
+        <label>Antall transaksjoner</label><input class="input-short" disabled="disabled" value="" /><br/>
+        <label>Antall innleveringer</label><input class="input-short" disabled="disabled" value="" /><br/>
+        <label>Antall utlån</label><input class="input-short" disabled="disabled" value="" /><br/>
+        <label>Antall statusendringer</label><input class="input-short" disabled="disabled" value="" /><br/>
+      </fieldset>
+    </form>
+
+    <p></p>
+    <table class="automater sortable-theme-light" data-sortable>
+      <thead>
+        <tr>
+          <th></th>
+          <th data-value>IP-adresse</th>
+          <th>Navn</th>
+          <th data-sortable="false">Transaksjonsaktivitet</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range $a := .Automats}}
+          <tr class="tr-automat" id="ip-{{$a.IP}}">
+            <td class="td-short"><span class="disconnected">2</span></td>
+            <td data-value=parseInt({{$a.IP}}) class="td-mid">{{$a.IP}}</td>
+            <td class="td-mid">{{$a.Name}}</td>
+            <td class="td-long">...</td>
+          </tr>
+        {{ end }}
+        </tr>
+      </tbody>
+    </table>
+    <p class="credits">Sist oppdatert 27.12.2013. Tilbakemeldinger sendes til digitalutivkling@gmail.com</p>
+  </div>
+  <script type="text/javascript">
+  /*! sortable.js 0.5.1 */
+(function(){var a,b,c,d,e,f,g;a="table[data-sortable]",d=/^-?[£$¤]?[\d,.]+%?$/,g=/^\s+|\s+$/g,f="ontouchstart"in document.documentElement,c=f?"touchstart":"click",b=function(a,b,c){return null!=a.addEventListener?a.addEventListener(b,c,!1):a.attachEvent("on"+b,c)},e={init:function(b){var c,d,f,g,h;for(null==b&&(b={}),null==b.selector&&(b.selector=a),d=document.querySelectorAll(b.selector),h=[],f=0,g=d.length;g>f;f++)c=d[f],h.push(e.initTable(c));return h},initTable:function(a){var b,c,d,f,g,h;if(1===(null!=(h=a.tHead)?h.rows.length:void 0)&&"true"!==a.getAttribute("data-sortable-initialized")){for(a.setAttribute("data-sortable-initialized","true"),d=a.querySelectorAll("th"),b=f=0,g=d.length;g>f;b=++f)c=d[b],"false"!==c.getAttribute("data-sortable")&&e.setupClickableTH(a,c,b);return a}},setupClickableTH:function(a,d,f){var g;return g=e.getColumnType(a,f),b(d,c,function(){var b,c,h,i,j,k,l,m,n,o,p,q,r,s,t,u;for(j="true"===this.getAttribute("data-sorted"),k=this.getAttribute("data-sorted-direction"),b=j?"ascending"===k?"descending":"ascending":g.defaultSortDirection,m=this.parentNode.querySelectorAll("th"),n=0,q=m.length;q>n;n++)d=m[n],d.setAttribute("data-sorted","false"),d.removeAttribute("data-sorted-direction");for(this.setAttribute("data-sorted","true"),this.setAttribute("data-sorted-direction",b),l=a.tBodies[0],h=[],t=l.rows,o=0,r=t.length;r>o;o++)c=t[o],h.push([e.getNodeValue(c.cells[f]),c]);for(j?h.reverse():h.sort(g.compare),u=[],p=0,s=h.length;s>p;p++)i=h[p],u.push(l.appendChild(i[1]));return u})},getColumnType:function(a,b){var c,f,g,h,i;for(i=a.tBodies[0].rows,g=0,h=i.length;h>g;g++)if(c=i[g],f=e.getNodeValue(c.cells[b]),""!==f&&f.match(d))return e.types.numeric;return e.types.alpha},getNodeValue:function(a){return a?null!==a.getAttribute("data-value")?a.getAttribute("data-value"):"undefined"!=typeof a.innerText?a.innerText.replace(g,""):a.textContent.replace(g,""):""},types:{numeric:{defaultSortDirection:"descending",compare:function(a,b){var c,d;return c=parseFloat(a[0].replace(/[^0-9.-]/g,"")),d=parseFloat(b[0].replace(/[^0-9.-]/g,"")),isNaN(c)&&(c=0),isNaN(d)&&(d=0),d-c}},alpha:{defaultSortDirection:"ascending",compare:function(a,b){var c,d;return c=a[0].toLowerCase(),d=b[0].toLowerCase(),c===d?0:d>c?-1:1}}}},setTimeout(e.init,0),window.Sortable=e}).call(this);
+
+  var c=new WebSocket('ws://{{.Host}}/ws');
+  c.onopen = function() {
+    console.log("connected");
+    $('.error').addClass('hidden');
+    c.onmessage = function(resp){
+            var data = JSON.parse(resp.data);
+            $('#metric-uptime').val(data.UpTime);
+            $('#metric-pid').val(data.PID);
+            $('#metric-known').val(data.ClientsKnown);
+            $('#metric-connected').val(data.ClientsConnected);
+          };
+  };
+  c.onclose = function() {
+    console.log("disconected");
+    $('.error').removeClass('hidden');
+  };
+  </script>
+</body>
+
+</html>
