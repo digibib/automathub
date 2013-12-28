@@ -12,8 +12,14 @@ run:
 todo:
 	@grep -n TODO *.go || true
 
+test:
+	go test
+
+integration:
+	go test -tags integration
+
 cover:
-	go test -coverprofile=coverage.out
+	go test -tags integration -coverprofile=coverage.out
 	go tool cover -html=coverage.out
 
 clean:

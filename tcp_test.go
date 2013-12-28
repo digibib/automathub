@@ -1,3 +1,5 @@
+// +build integration
+
 package main
 
 import (
@@ -31,7 +33,7 @@ func connect() {
 
 func TestTCPServer(t *testing.T) {
 	s := specs.New(t)
-	server := newTCPServer(&config{ListenAddr: ":6666"})
+	server := newTCPServer(&config{TCPPort: "6666"})
 
 	go server.run()
 	s.Expect(0, len(server.connections))
