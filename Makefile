@@ -10,7 +10,7 @@ run:
 	go run main.go config.go tcp.go handlers.go metrics.go ws.go --race
 
 todo:
-	@grep -n TODO *.go || true
+	@grep -rn TODO * || true
 
 test:
 	go test
