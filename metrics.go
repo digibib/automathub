@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/rcrowley/go-metrics"
 	"os"
 	"time"
+
+	"github.com/rcrowley/go-metrics"
 )
 
 type appMetrics struct {
@@ -22,11 +23,13 @@ type exportMetrics struct {
 
 func RegisterMetrics() *appMetrics {
 	var m appMetrics
+
 	m.StartTime = time.Now()
 	m.PID = os.Getpid()
 	m.ClientsKnown = len(cfg.Automats)
 	m.ClientsConnected = metrics.NewCounter()
 	metrics.Register("ClientsConnected", m.ClientsConnected)
+
 	return &m
 }
 
