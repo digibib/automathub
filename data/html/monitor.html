@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Title</title>
+  <title>Automat/SIP-overvåking</title>
   <link rel="stylesheet" href="/css/styles.css">
   <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 </head>
@@ -17,12 +17,14 @@
         <legend>Automathub</legend>
         <label>Oppetid</label><input id="metric-uptime" class="input-long" disabled="disabled" value="" /><br/>
         <label>PID</label><input id="metric-pid" class="input-short" disabled="disabled" value="" /><br/>
+        <label>Heap</label><input id="metric-heap" class="input-short" disabled="disabled" value="" /><br/>
+        <label>Goroutines</label><input id="metric-go" class="input-short" disabled="disabled" value="" /><br/>
       </fieldset>
 
       <fieldset class="left">
         <legend>Automater</legend>
-        <label>Antall tilkoblede</label><input id="metric-connected" class="input-short" disabled="disabled" value="" /><br/>
-        <label>Antall kjente</label><input id="metric-known" class="input-short"  disabled="disabled" value="" /><br/>
+        <label>Tilkoblede</label><input id="metric-connected" class="input-short" disabled="disabled" value="" /><br/>
+        <label>Kjente</label><input id="metric-known" class="input-short"  disabled="disabled" value="" /><br/>
       </fieldset>
     </form>
 
@@ -30,18 +32,35 @@
 
     <form class="metrics">
       <fieldset class="left">
-        <legend>Gjennomsnittsmålinger</legend>
-        <label>Transkasjonstid</label><input class="input-short" disabled="disabled" value="" /><br/>
-        <label>SIP-transaksjonstid</label><input class="input-short" disabled="disabled" value="" /><br/>
+        <legend>Responstid</legend>
+        <label>Min</label><input class="input-short" disabled="disabled" value="" />
+        <label>Max</label><input class="input-short" disabled="disabled" value="" /><br/>
+        <label>Gjennomsnitt</label><input class="input-short" disabled="disabled" value="" /><br/>
+        <label>Median</label><input class="input-short" disabled="disabled" value="" />
+        <label>Standardavvik</label><input class="input-short" disabled="disabled" value="" /><br/>
+        <label>99.9%</label><input class="input-short" disabled="disabled" value="" /><br/>
+        <label>99%</label><input class="input-short" disabled="disabled" value="" /><br/>
+        <label>75%</label><input class="input-short" disabled="disabled" value="" /><br/>
       </fieldset>
 
       <fieldset class="left">
-        <legend>Akumulerte målinger (siste 60min)</legend>
-        <label>Antall avbrutte tilkoblinger</label><input class="input-short" disabled="disabled" value="" /><br/>
-        <label>Antall transaksjoner</label><input class="input-short" disabled="disabled" value="" /><br/>
-        <label>Antall innleveringer</label><input class="input-short" disabled="disabled" value="" /><br/>
-        <label>Antall utlån</label><input class="input-short" disabled="disabled" value="" /><br/>
-        <label>Antall statusendringer</label><input class="input-short" disabled="disabled" value="" /><br/>
+        <legend>Transaksjonsfrekvens</legend>
+        <label></label>
+          <span class="input-label">gj.snitt</span>
+          <span class="input-label">5-min</span>
+          <span class="input-label">15-min</span><br/>
+        <label>Utlån</label>
+          <input class="input-short" disabled="disabled" value="" />
+          <input class="input-short" disabled="disabled" value="" />
+          <input class="input-short" disabled="disabled" value="" /><br/>
+        <label>Innlevering</label>
+          <input class="input-short" disabled="disabled" value="" />
+          <input class="input-short" disabled="disabled" value="" />
+          <input class="input-short" disabled="disabled" value="" /><br/>
+        <label>Statusendring</label>
+          <input class="input-short" disabled="disabled" value="" />
+          <input class="input-short" disabled="disabled" value="" />
+          <input class="input-short" disabled="disabled" value="" /><br/>
       </fieldset>
     </form>
 
@@ -67,7 +86,7 @@
         </tr>
       </tbody>
     </table>
-    <p class="credits">Sist oppdatert 27.12.2013. Tilbakemeldinger sendes til digitalutivkling@gmail.com</p>
+    <p class="credits">Tilbakemeldinger kan sendes til <a href="mailto:digitalutivkling@gmail.com">digitalutivkling@gmail.com</a></p>
   </div>
   <script type="text/javascript">
   /*! sortable.js 0.5.1 */

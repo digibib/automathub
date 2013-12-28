@@ -35,12 +35,13 @@ button::-moz-focus-inner, input::-moz-focus-inner { border: 0; padding: 0; }
 textarea { overflow: auto; vertical-align: top; }
 table { border-collapse: collapse; border-spacing: 0; }
 
-.clearfix { clear: both; }
+.clearfix { clear: both; }
 .left { float: left; }
 .right { float: right; }
 .hidden { display: none;}
 .content { padding: 1em; width: 1000px; margin: auto; background: #fff;}
-.credits { color: #8a8a8a; font-size:0.8em;}
+.credits { color: #8a8a8a; font-size:1em; border-top: 1px solid #aaa;
+           font-family: monospace; padding: 4px;}
 .automater { font-family: monospace; width: 100%;}
 .automater thead { font-weight: bold; }
 thead th { padding: 10px; text-align: left; vertical-align: bottom;}
@@ -55,7 +56,9 @@ thead th { padding: 10px; text-align: left; vertical-align: bottom;}
 .disconnected { background: red; color: red;}
 
 fieldset { font-family: monospace; width: 45.2%; margin: 1em 1em;}
-.metrics label { font-weight: bold; width:250px; display:inline-block;}
+.metrics label { font-weight: bold; width:120px; display:inline-block;}
+input { margin-right: 0.5em;}
+.input-label { width: 72px; display:inline-block; margin-bottom:4px;}
 .input-short { width: 60px;}
 .input-long { width: 160px;}
 .error { background: yellow; border: 2px dashed black; padding: 0.3em; font-size:1.3em; font-style: italic;}
