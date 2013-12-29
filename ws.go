@@ -38,12 +38,17 @@ func (c *monitorConn) reader() {
 }
 
 type wsHub struct {
-	monitor *monitorConn
-	mReg    chan *monitorConn
-	mUnReg  chan *monitorConn
-	// broadcast chan []byte
-	// register   chan uiConn
-	// unregister chan uiConn
+	monitors map[*monitorConn]bool // Connected monitor pages
+	mReg     chan *monitorConn     // Register monitor
+	mUnReg   chan *monitorConn     // Unregister monitor
+}
+
+func NewHub() *wsHub {
+	return &wsHub{
+		monitors: make(map[*monitorConn]bool),
+		mReg:     make(chan *monitorConn),
+		mUnReg:   make(chan *monitorConn),
+	}
 }
 
 func (h *wsHub) run() {
@@ -51,17 +56,24 @@ func (h *wsHub) run() {
 	for {
 		select {
 		case <-ticker.C:
-			if h.monitor != nil {
-				h.monitor.send <- stats.Export()
+			m := stats.Export()
+			for c := range h.monitors {
+				select {
+				case c.send <- m:
+				default:
+					delete(h.monitors, c)
+					close(c.send)
+					go c.ws.Close()
+				}
 			}
 		case c := <-h.mReg:
+			h.monitors[c] = true
 			log.Println("WS  Monitor connected")
-			h.monitor = c
-		case <-h.mUnReg:
-			close(h.monitor.send)
-			go h.monitor.ws.Close()
-			h.monitor = nil
+		case c := <-h.mUnReg:
+			delete(h.monitors, c)
+			close(c.send)
 			log.Println("WS  Monitor disconnected")
+
 		}
 	}
 }

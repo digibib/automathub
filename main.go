@@ -27,10 +27,7 @@ func init() {
 
 	stats = RegisterMetrics()
 
-	hub = &wsHub{
-		mReg:   make(chan *monitorConn),
-		mUnReg: make(chan *monitorConn),
-	}
+	hub = NewHub()
 }
 
 // Application entry point ////////////////////////////////////////////////////
