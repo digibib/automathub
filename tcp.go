@@ -9,8 +9,10 @@ import (
 )
 
 type TCPServer struct {
-	listenAddr  string
-	connections map[net.Conn]*TCPClient
+	listenAddr string
+	// TOOD this map should use only IP as key, but use ip+port for now
+	// so integration test is easy
+	connections map[string]*TCPClient
 	addChan     chan *TCPClient
 	rmChan      chan *TCPClient
 }
@@ -36,7 +38,7 @@ func (srv TCPServer) run() {
 
 func newTCPServer(cfg *config) *TCPServer {
 	return &TCPServer{
-		connections: make(map[net.Conn]*TCPClient, 0),
+		connections: make(map[string]*TCPClient, 0),
 		listenAddr:  ":" + cfg.TCPPort,
 		addChan:     make(chan *TCPClient),
 		rmChan:      make(chan *TCPClient),
@@ -51,12 +53,12 @@ func (srv TCPServer) handleMessages() {
 			log.Println("TCP number of connections:", len(srv.connections))
 		case client := <-srv.addChan:
 			log.Printf("TCP [%v] client connected\n", client.conn.RemoteAddr())
-			srv.connections[client.conn] = client
+			srv.connections[client.conn.RemoteAddr().String()] = client
 			client.outgoing <- "Welcome!\n"
 			stats.ClientsConnected.Inc(1)
 		case client := <-srv.rmChan:
 			log.Printf("TCP [%v] client disconnected\n", client.conn.RemoteAddr())
-			delete(srv.connections, client.conn)
+			delete(srv.connections, client.conn.RemoteAddr().String())
 			stats.ClientsConnected.Dec(1)
 		}
 	}

@@ -19,7 +19,7 @@ const (
 	DURATION = 2 * time.Second
 	// TCPServer addresss
 	HOST = "localhost:6666"
-	// File containing Barcodes separated by \n
+	// File containing barcodes; one per line
 	ITEMSFILE = "items.txt"
 )
 

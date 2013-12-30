@@ -20,11 +20,11 @@ type response struct {
 	Barcode  string
 }
 
-func parseRequest(b []byte) (*request, error) {
-	var req *request
-	err := json.Unmarshal(b, req)
+func parseResponse(b []byte) (*response, error) {
+	var resp *response
+	err := json.Unmarshal(b, resp)
 	if err != nil {
-		return req, err
+		return resp, err
 	}
-	return req, nil
+	return resp, nil
 }

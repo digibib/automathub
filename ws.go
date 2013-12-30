@@ -8,10 +8,27 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type uiConn struct {
+type UIState int
+
+const (
+	WAITING UIState = iota
+	CHECKIN
+	CHECKOUT
+	STATUS
+)
+
+type UIConn struct {
+	state    UIState  // User-initiated state of the automat
+	clientIP net.Addr // IP of automat
 	ws       *websocket.Conn
-	clientIP net.Addr
 	send     chan []byte
+}
+
+func NewUIConn() *UIConn {
+	return &UIConn{
+		state: WAITING,
+		send:  make(chan []byte),
+	}
 }
 
 type monitorConn struct {
