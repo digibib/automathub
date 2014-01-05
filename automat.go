@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"log"
 	"net"
+	"strings"
 
 	"github.com/gorilla/websocket"
 )
@@ -43,6 +44,7 @@ type Automat struct {
 func newAutomat(c net.Conn) *Automat {
 	return &Automat{
 		State:    uiWAITING,
+		IP:       c.RemoteAddr().String(),
 		conn:     c,
 		FromRFID: make(chan []byte),
 		ToRFID:   make(chan []byte),
@@ -57,51 +59,52 @@ func (a *Automat) run() {
 	for {
 		select {
 		case msg := <-a.FromRFID:
-			println("-> RFID:", msg)
-		case msg := <-a.ToRFID:
-			println("<- RFID:", msg)
+			a.ToUI <- msg
+			log.Println("<- RFID:", strings.TrimRight(string(msg), "\n"))
 		case msg := <-a.FromUI:
-			println("<- UI", msg)
-		case msg := <-a.ToUI:
-			println("-> UI:", msg)
+			log.Println("<- UI", strings.TrimRight(string(msg), "\n"))
 		case <-a.Quit:
 			// cleanup: close channels & connections
-			println("shutting down state machine")
+			close(a.ToUI)
+			close(a.ToRFID)
+			log.Println("shutting down state machine", a.IP)
+			return
 		}
 	}
 }
 
 // read from tcp connection and pipe into FromRFID channel
-func (a *Automat) tcpRead() {
+func (a *Automat) tcpReader() {
 	r := bufio.NewReader(a.conn)
 	for {
 		msg, err := r.ReadBytes('\n')
 		if err != nil {
-			return
+			break
 		}
 		a.FromRFID <- msg
 	}
 }
 
 // write messages from channel ToRFID to tcp connection
-func (a *Automat) tcpWrite() {
+func (a *Automat) tcpWriter() {
 	w := bufio.NewWriter(a.conn)
 	for msg := range a.ToRFID {
 		_, err := w.Write(msg)
 		if err != nil {
 			log.Println(err)
-			return
+			break
 		}
+		log.Println("-> RFID:", strings.TrimRight(string(msg), "\n"))
 		err = w.Flush()
 		if err != nil {
 			log.Println(err)
-			return
+			break
 		}
 	}
 }
 
 // read from websocket connection and pipe into FromUI channel
-func (a *Automat) wsRead() {
+func (a *Automat) wsReader() {
 	for {
 		// msgType, msg, err
 		_, msg, err := a.ws.ReadMessage()
@@ -114,11 +117,13 @@ func (a *Automat) wsRead() {
 }
 
 // write messages from channel ToUI into websocket connection
-func (a *Automat) wsWrite() {
+func (a *Automat) wsWriter() {
 	for msg := range a.ToUI {
-		err := a.ws.WriteJSON(msg)
+		// TODO ws.WriteJSON() takes interface{}, i.e  go struct
+		err := a.ws.WriteMessage(websocket.TextMessage, msg)
 		if err != nil {
 			break
 		}
+		log.Println("-> UI:", strings.TrimRight(string(msg), "\n"))
 	}
 }

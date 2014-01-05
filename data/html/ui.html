@@ -5,6 +5,7 @@
   <meta charset="utf-8">
   <title>Title</title>
   <link rel="stylesheet" href="/css/styles.css">
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 </head>
 
 <body>
@@ -28,6 +29,31 @@
     </div>
     <div class="clearfix"></div>
   </div>
+
+  <script>
+    // Get Query parameter
+    function getParameterByName(name) {
+        name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+            results = regex.exec(location.search);
+        return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    }
+
+    $(document).ready(function() {
+       var c=new WebSocket('ws://{{.Host}}/ws?client={{.Client}}');
+       c.onopen = function() {
+         console.log("connected");
+
+         c.onmessage = function(resp) {
+           console.log(JSON.parse(resp.data));
+         };
+      };
+       c.onclose = function() {
+         console.log("disconected");
+         // TODO try to reconnecd SetInterval 1 sec
+       };
+    });
+  </script>
 </body>
 
 </html>

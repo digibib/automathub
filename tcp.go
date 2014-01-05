@@ -1,10 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"log"
 	"net"
-	"strings"
 	"time"
 )
 
@@ -12,9 +10,9 @@ type TCPServer struct {
 	listenAddr string
 	// TOOD this map should use only IP as key, but use ip+port for now
 	// so integration test is easy
-	connections map[string]*TCPClient
-	addChan     chan *TCPClient
-	rmChan      chan *TCPClient
+	connections map[string]*Automat
+	addChan     chan *Automat
+	rmChan      chan *Automat
 }
 
 func (srv TCPServer) run() {
@@ -38,10 +36,23 @@ func (srv TCPServer) run() {
 
 func newTCPServer(cfg *config) *TCPServer {
 	return &TCPServer{
-		connections: make(map[string]*TCPClient, 0),
+		connections: make(map[string]*Automat, 0),
 		listenAddr:  ":" + cfg.TCPPort,
-		addChan:     make(chan *TCPClient),
-		rmChan:      make(chan *TCPClient),
+		addChan:     make(chan *Automat),
+		rmChan:      make(chan *Automat),
+	}
+}
+
+func (srv TCPServer) get(addr string) <-chan *Automat {
+	c := make(chan *Automat)
+	for {
+		go func() {
+			if a, ok := srv.connections[addr]; ok {
+				c <- a
+				return
+			}
+		}()
+		return c
 	}
 }
 
@@ -51,75 +62,33 @@ func (srv TCPServer) handleMessages() {
 		select {
 		case <-ticker.C:
 			log.Println("TCP number of connections:", len(srv.connections))
-		case client := <-srv.addChan:
-			log.Printf("TCP [%v] client connected\n", client.conn.RemoteAddr())
-			srv.connections[client.conn.RemoteAddr().String()] = client
-			client.outgoing <- "Welcome!\n"
+		case automat := <-srv.addChan:
+			log.Printf("TCP [%v] automat connected\n", automat.conn.RemoteAddr())
+			srv.connections[automat.conn.RemoteAddr().String()] = automat
+			automat.ToRFID <- []byte("Welcome!\n")
 			stats.ClientsConnected.Inc(1)
-		case client := <-srv.rmChan:
-			log.Printf("TCP [%v] client disconnected\n", client.conn.RemoteAddr())
-			delete(srv.connections, client.conn.RemoteAddr().String())
+		case automat := <-srv.rmChan:
+			log.Printf("TCP [%v] automat disconnected\n", automat.conn.RemoteAddr())
+			automat.ws.Close() // close ws connection
+			delete(srv.connections, automat.conn.RemoteAddr().String())
 			stats.ClientsConnected.Dec(1)
 		}
 	}
 }
 
 func (srv TCPServer) handleConnection(c net.Conn) {
-	client := newTCPClient(c)
+	automat := newAutomat(c)
 	defer c.Close()
 
-	// register client
-	srv.addChan <- client
+	// register automat
+	srv.addChan <- automat
 
-	// unregister when client.Read() returns
+	// unregister when automat.Read() returns
 	defer func() {
-		srv.rmChan <- client
+		srv.rmChan <- automat
 	}()
 
-	go client.Write()
-	client.Read()
-}
-
-type TCPClient struct {
-	conn     net.Conn
-	outgoing chan string
-	reader   *bufio.Reader
-	writer   *bufio.Writer
-}
-
-func newTCPClient(c net.Conn) *TCPClient {
-	client := &TCPClient{
-		conn:     c,
-		outgoing: make(chan string),
-		reader:   bufio.NewReader(c),
-		writer:   bufio.NewWriter(c),
-	}
-	return client
-}
-
-func (client *TCPClient) Read() {
-	for {
-		msg, err := client.reader.ReadBytes('\n')
-		if err != nil {
-			return
-		}
-		// parse msg
-		log.Printf("<-- [%v] %v\n", client.conn.RemoteAddr(), strings.TrimRight(string(msg), "\r\n"))
-	}
-}
-
-func (client *TCPClient) Write() {
-	for msg := range client.outgoing {
-		_, err := client.writer.WriteString(msg)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		log.Printf("--> [%v] %v\n", client.conn.RemoteAddr(), strings.TrimRight(msg, "\r\n"))
-		err = client.writer.Flush()
-		if err != nil {
-			log.Println(err)
-			return
-		}
-	}
+	go automat.run()
+	go automat.tcpWriter()
+	automat.tcpReader()
 }

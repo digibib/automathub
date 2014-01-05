@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -30,8 +31,10 @@ func uiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	data := struct {
-		Host string
+		Host   string
+		Client string
 	}{
+		r.Host,
 		v.Get("client"),
 	}
 	err := templates.ExecuteTemplate(w, "ui.html", data)
@@ -40,7 +43,6 @@ func uiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// statusHandler serves the application status endoint /.status
 func statusHandler(w http.ResponseWriter, r *http.Request) {
 	b, err := json.Marshal(stats.Export())
 	if err != nil {
@@ -72,7 +74,24 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		c.reader()
 	} else {
 		// UI connection
-		println("not monitor")
+		// TODO this might never return, handle otherwise, with timeout?
+		a := <-server.get(v.Get("client"))
+		a.ws = ws
+		log.Println("UI  ", a.IP, "connected")
+
+		defer func() {
+			log.Println("UI  ", a.IP, "disconnected")
+			//close(a.ToUI)
+			go a.ws.Close()
+		}()
+
+		go a.wsWriter()
+		a.ToUI <- []byte("{\"msg\":\"hei & velkommen\"}")
+		a.wsReader()
+		// TODO rethink
+		// Instead og go.wswriter & a.wsreader
+		// wait for ?
+		// <- a.quit (quit: make(chan bool, 1))
 	}
 }
 
