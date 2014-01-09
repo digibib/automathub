@@ -1,3 +1,8 @@
+all:
+	go vet
+	golint .
+	make todo
+
 build:
 	export GOBIN=$(shell pwd)
 	go build
