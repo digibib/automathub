@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"math/rand"
+	"net"
 	"os"
 	"strings"
 	"sync"
@@ -36,6 +37,20 @@ const (
 	MAXCHEKCOUTS = 20
 )
 
+type RFIDState uint
+
+const (
+	RFIDWaiting RFIDState = iota
+	RFIDReading
+)
+
+type RFIDService struct {
+	state    RFIDState
+	conn     net.Conn
+	incoming chan []byte
+	outgoing chan []byte
+}
+
 type patron struct {
 	sync.Mutex
 	ID        string
@@ -46,6 +61,62 @@ var (
 	patrons []*patron
 	items   []string
 )
+
+func newRFIDService() *RFIDService {
+	return &RFIDService{
+		state:    RFIDWaiting,
+		incoming: make(chan []byte),
+		outgoing: make(chan []byte)}
+}
+
+func (s *RFIDService) connect() error {
+	conn, err := net.Dial("tcp", HOST)
+	if err != nil {
+		return err
+	}
+	s.conn = conn
+	return nil
+}
+
+func (s *RFIDService) reader() {
+	r := bufio.NewReader(s.conn)
+	for {
+		msg, err := r.ReadBytes('\n')
+		if err != nil {
+			close(s.outgoing)
+			return
+		}
+		s.incoming <- msg
+	}
+}
+
+func (s *RFIDService) writer() {
+	w := bufio.NewWriter(s.conn)
+	for msg := range s.outgoing {
+		_, err := w.Write(msg)
+		if err != nil {
+			log.Println(err)
+		}
+		err = w.Flush()
+		if err != nil {
+			log.Println(err)
+		}
+	}
+}
+
+func (s *RFIDService) handleMessages() {
+	defer s.conn.Close()
+
+	go s.reader()
+	go s.writer()
+	for {
+		select {
+		case msg := <-s.incoming:
+			log.Println("incoming", string(msg))
+		}
+
+	}
+}
 
 func init() {
 	// load & init patrons
@@ -98,20 +169,29 @@ func checkout(p *patron) {
 	}
 }
 
-func simulateAutomat(automat int) {
+func simulateAutomat() {
+	s := newRFIDService()
+	err := s.connect()
+	if err != nil {
+		return
+	}
+
+	go s.handleMessages()
+	a := s.conn.LocalAddr().String()
+
 	for {
 		action := rand.Intn(100)
 		switch {
 		case action < 40 && action > 0:
 			patron := patrons[rand.Intn(len(patrons))]
-			log.Printf("[%d] simulating checkin patron: %v\n", automat, patron.ID)
+			log.Printf("[%v] simulating checkin patron: %v\n", a, patron.ID)
 			checkin(patron)
 		case action > 40 && action < 80:
 			patron := patrons[rand.Intn(len(patrons))]
-			log.Printf("[%d] simulating login patron: %v\n", automat, patron.ID)
+			log.Printf("[%v] simulating login patron: %v\n", a, patron.ID)
 			checkout(patron)
 		case action > 80:
-			log.Printf("[%d] simulating wait\n", automat)
+			log.Printf("[%v] simulating wait\n", a)
 			time.Sleep(time.Millisecond * time.Duration(rand.Intn(100)+1))
 		}
 	}
@@ -126,7 +206,7 @@ func TestAutomatPatronInteraction(t *testing.T) {
 	s.Expect(0, len(server.connections))
 
 	for i := 0; i < NUMCLIENTS; i++ {
-		go simulateAutomat(i)
+		go simulateAutomat()
 
 	}
 
