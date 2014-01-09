@@ -118,32 +118,6 @@ func (s *RFIDService) handleMessages() {
 	}
 }
 
-func init() {
-	// load & init patrons
-	f1, err := os.Open(PATRONSFILE)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f1.Close()
-	scanner := bufio.NewScanner(f1)
-	for scanner.Scan() {
-		patrons = append(patrons, &patron{ID: scanner.Text()})
-	}
-
-	// load items
-	f2, err := os.Open(ITEMSFILE)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f2.Close()
-	reader2 := bufio.NewReader(f2)
-	contents, err := ioutil.ReadAll(reader2)
-	if err != nil {
-		log.Fatal(err)
-	}
-	items = strings.Split(string(contents), "\n")
-}
-
 func checkin(p *patron) {
 	p.Mutex.Lock()
 	defer p.Mutex.Unlock()
@@ -196,6 +170,36 @@ func simulateAutomat() {
 		}
 	}
 }
+
+// SETUP
+
+func init() {
+	// load & init patrons
+	f1, err := os.Open(PATRONSFILE)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f1.Close()
+	scanner := bufio.NewScanner(f1)
+	for scanner.Scan() {
+		patrons = append(patrons, &patron{ID: scanner.Text()})
+	}
+
+	// load items
+	f2, err := os.Open(ITEMSFILE)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f2.Close()
+	reader2 := bufio.NewReader(f2)
+	contents, err := ioutil.ReadAll(reader2)
+	if err != nil {
+		log.Fatal(err)
+	}
+	items = strings.Split(string(contents), "\n")
+}
+
+// TESTS
 
 func TestAutomatPatronInteraction(t *testing.T) {
 	s := specs.New(t)
