@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -74,24 +75,27 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		c.reader()
 	} else {
 		// UI connection
-		// TODO this might never return, handle otherwise, with timeout?
-		a := <-server.get(v.Get("client"))
-		a.ws = ws
-		log.Println("UI  ", a.IP, "connected")
+		select {
+		case a := <-server.get(v.Get("client")):
+			a.ws = ws
+			log.Println("UI  ", a.IP, "connected")
 
-		defer func() {
-			log.Println("UI  ", a.IP, "disconnected")
-			//close(a.ToUI)
-			go a.ws.Close()
-		}()
+			defer func() {
+				log.Println("UI  ", a.IP, "disconnected")
+				//close(a.ToUI)
+				go a.ws.Close()
+			}()
 
-		go a.wsWriter()
-		a.ToUI <- []byte("{\"msg\":\"hei & velkommen\"}")
-		a.wsReader()
-		// TODO rethink
-		// Instead og go.wswriter & a.wsreader
-		// wait for ?
-		// <- a.quit (quit: make(chan bool, 1))
+			go a.wsWriter()
+			a.ToUI <- []byte("{\"msg\":\"hei & velkommen\"}")
+			a.wsReader()
+			// TODO rethink
+			// Instead og go.wswriter & a.wsreader
+			// wait for ?
+			// <- a.quit (quit: make(chan bool, 1))
+		case <-time.After(time.Second * 3):
+			return
+		}
 	}
 }
 
