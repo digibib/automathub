@@ -69,7 +69,10 @@ func (srv TCPServer) handleMessages() {
 			stats.ClientsConnected.Inc(1)
 		case automat := <-srv.rmChan:
 			log.Printf("TCP [%v] automat disconnected\n", automat.conn.RemoteAddr())
-			automat.ws.Close() // close ws connection
+			// close ws connection
+			if automat.ws != nil { // panics if no connection
+				automat.ws.Close()
+			}
 			delete(srv.connections, automat.conn.RemoteAddr().String())
 			stats.ClientsConnected.Dec(1)
 		}
