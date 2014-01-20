@@ -21,8 +21,8 @@ const (
 	uiERROR
 )
 
-// Automat is a state machine for the automats. It handles all communications
-// with the RFID-service and the User interface.
+// Automat is a state machine for the automats. It recieves communcations
+// from RFID service, User Interface and communicates with the SIP server.
 type Automat struct {
 	State uiState
 	IP    string // remote address of the automat

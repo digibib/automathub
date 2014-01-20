@@ -35,8 +35,8 @@ func init() {
 
 func main() {
 	// TCP server handles the communcation with the RFID-service on the
-	// self-checkin-automats, dispatches to SIP-server and handles all the
-	// business logic.
+	// self-checkin-automats, and spins up an automat state-machine for every
+	// connection.
 	server = newTCPServer(cfg)
 	go server.run()
 
