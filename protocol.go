@@ -28,3 +28,12 @@ func parseResponse(b []byte) (*response, error) {
 	}
 	return resp, nil
 }
+
+func parseRequest(b []byte) (*request, error) {
+	var req *request
+	err := json.Unmarshal(b, req)
+	if err != nil {
+		return req, err
+	}
+	return req, nil
+}
