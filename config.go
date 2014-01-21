@@ -6,8 +6,9 @@ import (
 )
 
 type automat struct {
-	IP   string
-	Name string
+	IP         string
+	Name       string
+	Department string
 }
 
 type config struct {
