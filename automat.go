@@ -27,8 +27,13 @@ type Automat struct {
 	State uiState
 	IP    string // remote address of the automat
 
+	// SIP connection (via TCP)
+	// This is closed when as long as State is uiWAITING, otherwise keep alive
+	// to reuse TCP connection.
+	SIPConn net.Conn
+
 	// Communication with the RFID service (via TCP)
-	conn     net.Conn
+	RFIDconn net.Conn
 	FromRFID chan []byte
 	ToRFID   chan []byte
 
@@ -45,7 +50,7 @@ func newAutomat(c net.Conn) *Automat {
 	return &Automat{
 		State:    uiWAITING,
 		IP:       c.RemoteAddr().String(),
-		conn:     c,
+		RFIDconn: c,
 		FromRFID: make(chan []byte),
 		ToRFID:   make(chan []byte),
 		ToUI:     make(chan []byte),
@@ -75,7 +80,7 @@ func (a *Automat) run() {
 
 // read from tcp connection and pipe into FromRFID channel
 func (a *Automat) tcpReader() {
-	r := bufio.NewReader(a.conn)
+	r := bufio.NewReader(a.RFIDconn)
 	for {
 		msg, err := r.ReadBytes('\n')
 		if err != nil {
@@ -87,7 +92,7 @@ func (a *Automat) tcpReader() {
 
 // write messages from channel ToRFID to tcp connection
 func (a *Automat) tcpWriter() {
-	w := bufio.NewWriter(a.conn)
+	w := bufio.NewWriter(a.RFIDconn)
 	for msg := range a.ToRFID {
 		_, err := w.Write(msg)
 		if err != nil {

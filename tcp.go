@@ -9,7 +9,7 @@ import (
 type TCPServer struct {
 	listenAddr string
 	// TOOD this map should use only IP as key, but use ip+port for now
-	// so integration test is easy
+	// so integration test is easy on localhost (=same ip for all connections)
 	connections map[string]*Automat
 	addChan     chan *Automat
 	rmChan      chan *Automat
@@ -63,17 +63,17 @@ func (srv TCPServer) handleMessages() {
 		case <-ticker.C:
 			log.Println("TCP number of connections:", len(srv.connections))
 		case automat := <-srv.addChan:
-			log.Printf("TCP [%v] automat connected\n", automat.conn.RemoteAddr())
-			srv.connections[automat.conn.RemoteAddr().String()] = automat
+			log.Printf("TCP [%v] automat connected\n", automat.RFIDconn.RemoteAddr())
+			srv.connections[automat.RFIDconn.RemoteAddr().String()] = automat
 			automat.ToRFID <- []byte("Welcome!\n")
 			stats.ClientsConnected.Inc(1)
 		case automat := <-srv.rmChan:
-			log.Printf("TCP [%v] automat disconnected\n", automat.conn.RemoteAddr())
+			log.Printf("TCP [%v] automat disconnected\n", automat.RFIDconn.RemoteAddr())
 			// close ws connection
 			if automat.ws != nil { // panics if no connection
 				automat.ws.Close()
 			}
-			delete(srv.connections, automat.conn.RemoteAddr().String())
+			delete(srv.connections, automat.RFIDconn.RemoteAddr().String())
 			stats.ClientsConnected.Dec(1)
 		}
 	}
