@@ -6,46 +6,396 @@
   <title>Title</title>
   <link rel="stylesheet" href="/css/styles.css">
   <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+  <script src="/js/react-with-addons-0.8.0.js"></script>
+  <script src="/js/JSXTransformer-0.8.0.js"></script>
+  <style>
+    article,aside,details,figcaption,figure,footer,header,hgroup,main,nav,section,summary { display: block; }
+    audio,canvas,video { display: inline-block; }
+    [hidden], template { display: none; }
+    html { font-family: sans-serif; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; }
+    body { margin: 0; background: #fff; padding: 0; font-family: Arial;}
+    a { background: transparent; }
+    a:focus { outline: thin dotted; }
+    a:active, a:hover { outline: 0; }
+    h1 { font-size: 2em; margin: 0.67em 0; }
+    abbr[title] { border-bottom: 1px dotted; }
+    b, strong { font-weight: bold; }
+    dfn { font-style: italic; }
+    mark { background: #ff0; color: #000; }
+    code, kbd, pre, samp { font-family: monospace, serif; font-size: 1em; }
+    pre { white-space: pre-wrap; }
+    q { quotes: "\201C" "\201D" "\2018" "\2019"; }
+    small { font-size: 80%; }
+    sub, sup {font-size: 75%; line-height: 0; position: relative; vertical-align: baseline; }
+    sup { top: -0.5em; }
+    sub { bottom: -0.25em; }
+    img { border: 0; }
+    svg:not(:root) { overflow: hidden; }
+    figure { margin: 0; }
+    fieldset { border: 0; margin: 0 2px; padding: 0.35em 0.625em 0.75em; }
+    legend { font-size: 1.1em; border: 0; padding: 0; letter-spacing: 0.05em; text-decoration: underline;}
+    button,input,select,textarea { font-family: inherit;font-size: 100%; margin: 0; }
+    button,input { line-height: normal; }
+    button, select { text-transform: none; }
+    button, html input[type="button"], input[type="reset"], input[type="submit"] { -webkit-appearance: button; cursor: pointer; }
+    button[disabled], html input[disabled] { cursor: default; }
+    input[type="checkbox"], input[type="radio"] { box-sizing: border-box; padding: 0; }
+    input[type="search"] { -webkit-appearance: textfield; -moz-box-sizing: content-box; -webkit-box-sizing: content-box; box-sizing: content-box; }
+    input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webkit-search-decoration { -webkit-appearance: none; }
+    button::-moz-focus-inner, input::-moz-focus-inner { border: 0; padding: 0; }
+    textarea { overflow: auto; vertical-align: top; }
+    table { border-collapse: collapse; border-spacing: 0; }
+
+    .left { float: left; }
+    .right { float: right; }
+    .clearfix { clear: both; }
+    .hidden { display: none; }
+
+    #content { width: 1000px; margin: auto; }
+    #overlay { position: fixed; top:0; left:0; width:100%; height: 100%; z-index:99;
+             background-color:#000; opacity:0.8; /*pointer-events:none;*/ }
+    .messageBox { opacity:1; background-color: #fff; z-index: 101; pointer-events:auto;
+                  font-size:1.3em; line-height: 2em; padding: 3em 1em 1em 1em;}
+    .messageBox label { display: inline-block; width: 150px; font-weight: bold;}
+    .messageBox button { height: 2em; width: 120px; margin: 1em 1em 0 0;}
+    .absCenter { height: 20%; width: 30%; overflow: auto; margin: auto; border: 10px solid yellow;
+                 position: absolute; top: -100px; left: 0; bottom: 0; right: 0;}
+    .headerBar { border-bottom: 1px solid #aaa; color:#888; height: 1.2em;
+                 font-family: monospace; margin-bottom:1em;}
+    .patronBar { clear:both; font-size: 1.3em; line-height:2em; margin: 1em 0;
+                 height: 2em;}
+    .patron { margin-left:1em;}
+    .logout { background: #C23B22; width: 312px; font-size: 1.5em; font-weight: bold;
+              letter-spacing: 2px; color: #fff; text-align: center; margin-right:14px;
+              cursor: pointer;}
+    .buttons-box { margin-top: 1em;}
+    .box-big { width: 248px; height: 160px; float:left; font-size:2em; background:green;
+               padding:1em; color: #fff; font-weight: bold; letter-spacing:2px;
+               margin: 0 10px; position: relative; cursor: pointer;}
+    .box-comment { font-weight:normal; display: inline-block; margin-top: 0.7em;
+                   line-height:1.3em; letter-spacing:1px;}
+    .box-active { border-bottom: 20px solid #888; background:#666; cursor: default !important;}
+    .smaller .box-big { height: 30px; transition: all .3s ease;}
+    .listBox { border:2px solid #888; width: 952px; margin-left:10px; height: 400px; padding: 10px;
+               overflow: hidden;}
+    .item-list { width: 100%; margin-top: 1em;}
+    .td-item { width: 600px;}
+    .table-caption { background: #aaa; color: #000; text-align: left; letter-spacing:1px;
+                         font-size:1.5em; padding: 4px; font-weight: bold; margin-bottom: .4em;}
+    .table-caption.clickable { background: green; color: #fff; cursor: pointer; }
+    .item-list thead { border-bottom: 1px solid #888; }
+    .item-list th { text-align: left; padding-top:1em;}
+    .item-list tr:nth-child(even) { background:#eee;}
+    .item-list td { padding: 10px 0; }
+    .item-list button { background: green; color: #fff; border:0; width:100px; height:1.5em;}
+    .slider { overflow: hidden; max-height: 400px; transition: all .3s cubic-bezier(0, 1, 0.5, 1);}
+    .closed.slider { max-height: 0; overflow: hidden;}
+
+  </style>
 </head>
 
 <body>
-  <div class="content">
-    <div class="ui-top">
-      <div class="left">Selvbetjening</div>
-      <div class="client-adress right">{{.Host}}</div>
-    </div>
-    <div class="clearfix patron hidden">
-      <div class="left">
-        Logget inn som Ole Olsen (N001235236)
-      </div>
-      <div class="right">
-        <button class="logg-out">Avslutt</button>
-      </div>
-    </div>
-    <div class="clearfix buttons-box">
-      <div class="box-big box-margin">UTLÅN</div>
-      <div class="box-big box-margin">INNLEVERING</div>
-      <div class="box-big">STATUS<br/><span class="box-smaller">lån og<br/>reserveringer</span></div>
-    </div>
-    <div class="clearfix"></div>
-  </div>
+  <div id="content"></div>
+  <script type="text/jsx">
+    {{.JSXPragma}}
 
-  <script>
-    $(document).ready(function() {
-       var c=new WebSocket('ws://{{.Host}}/ws?client={{.Client}}');
-       c.onopen = function() {
-         console.log("connected");
+    var c; // ws connection
+    var cx = React.addons.classSet;
 
-         c.onmessage = function(resp) {
-           console.log(JSON.parse(resp.data));
-         };
-      };
-       c.onclose = function() {
-         console.log("disconected");
-         // TODO try to reconnecd SetInterval 1 sec
-       };
+    function trim (str) {
+      return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+    }
+
+    var Header = React.createClass({
+      render: function() {
+        return (
+          <div className="headerBar">
+            <div className="right">{this.props.ClientAddress}</div>
+          </div>
+          );
+      }
     });
+
+    var PatronBar = React.createClass({
+      render: function() {
+        return (
+          <div className={this.props.mode==="WAITING" ? "hidden" : "patronBar" }>
+            <div className="left patron">{this.props.patron ? "Logget inn med lånenummer "+this.props.patron : "" }</div>
+            <div className="right logout" onClick={this.props.logout} >Avslutt</div>
+          </div>
+          );
+      }
+    });
+
+    var BigButton = React.createClass({
+      render: function() {
+        return (
+          <div className={this.props.data.active ? "box-big box-active" : "box-big"} onClick={this.props.handleClick}>
+          {this.props.data.label}
+          <span className={this.props.mode==="WAITING" ? "box-comment" : "hidden"}>{this.props.data.comment}</span>
+          </div>
+          );
+      }
+    });
+
+    var StatusList = React.createClass({
+      getInitialState: function() {
+        return { active: "pickups" };
+      },
+      changeActive: function(which) {
+        this.setState({ active: which });
+      },
+      render: function() {
+        pickups = this.props.pickups.map(function(e,i) {
+          return (
+            <tr key={i}>
+              <td className="td-item">{e.item}</td>
+              <td>{e.status}</td>
+              <td><button>Avbestill</button></td>
+            </tr>
+            );
+        });
+        holdings = this.props.holdings.map(function(e,i) {
+          return (
+            <tr key={i}>
+              <td className="td-item">{e.item}</td>
+              <td>{e.status}</td>
+              <td><button>Avbestill</button></td>
+            </tr>
+            );
+        });
+        loans = this.props.loans.map(function(e,i) {
+          return (
+            <tr key={i}>
+              <td className="td-item">{e.item}</td>
+              <td>{e.status}</td>
+              <td><button>Forny</button></td>
+            </tr>
+            );
+        });
+        return (
+          <div className={this.props.mode==="STATUS" ? "clearfix listBox" : "hidden"}>
+            <div className={this.state.active==="pickups" ? "table-caption": "table-caption clickable"} onClick={this.changeActive.bind(null, "pickups")}><span>Til avhenting</span></div>
+            <div className={this.state.active==="pickups" ? "slider": "slider closed"}>
+              <table className="item-list">
+                <thead>
+                  <tr>
+                    <th>MATERIALE</th>
+                    <th>HENTENUMMER</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pickups}
+                </tbody>
+              </table>
+            </div>
+            <div className={this.state.active==="loans" ? "table-caption": "table-caption clickable"} onClick={this.changeActive.bind(null, "loans")}><span>Lån</span></div>
+            <div className={this.state.active==="loans" ? "slider": "slider closed"}>
+              <table className="item-list">
+                <thead>
+                  <tr>
+                    <th>MATERIALE</th>
+                    <th>FORFALLSDATO</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loans}
+                </tbody>
+              </table>
+            </div>
+            <div className={this.state.active==="holdings" ? "table-caption": "table-caption clickable"} onClick={this.changeActive.bind(null, "holdings")}><span>Reserveringer</span></div>
+            <div className={this.state.active==="holdings" ? "slider": "slider closed"}>
+              <table className="item-list">
+                <thead>
+                  <tr>
+                    <th>MATERIALE</th>
+                    <th>STATUS</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {holdings}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          );
+      }
+    });
+
+    var CheckoutList = React.createClass({
+      render: function() {
+        return (
+          <div className={this.props.mode==="CHECKOUT" ? "clearfix listBox" : "hidden"}>
+            Utlån
+          </div>
+          );
+      }
+    });
+
+    var CheckinList = React.createClass({
+      render: function() {
+        return (
+          <div className={this.props.mode==="CHECKIN" ? "clearfix listBox" : "hidden"}>
+            innleveringer
+          </div>
+          );
+      }
+    });
+
+    var Authenticate = React.createClass({
+      mixins: [React.addons.LinkedStateMixin],
+
+      getInitialState: function() {
+        return {Name: "", PIN: "", NameEntered: false};
+      },
+      componentDidMount: function() {
+        this.refs.nameInput.getDOMNode().focus();
+      },
+      onCancel: function() {
+        this.setState(this.getInitialState());
+        this.props.cancel();
+      },
+      onAuthenticate: function() {
+        this.props.login(this.state.Name);
+        this.setState(this.getInitialState());
+      },
+      onKeyFinish: function(e) {
+        if (this.state.PIN.length === 4 && e.keyCode === 13) {
+          this.onAuthenticate();
+        }
+      },
+      onNext: function(e) {
+        if (e.keyCode === 13 && e.target.value.trim() !== "" ) {
+          this.setState({NameEntered: true});
+        }
+      },
+      render: function() {
+        return (
+            <div className="messageBox absCenter">
+              <div className={this.state.NameEntered ? "hidden" : ""}>
+                <label>Lånenummer</label>
+                <input ref="nameInput" autoFocus onKeyUp={this.onNext} type="text" maxLength="9" valueLink={this.linkState('Name')} />
+              </div>
+              <div className={this.state.NameEntered ? "" : "hidden"}>
+                <label>PIN-kode</label><input autoFocus maxLength="4" size="4" type="password" onKeyUp={this.onKeyFinish} valueLink={this.linkState('PIN')} />
+              </div>
+              <label></label>
+              <button disabled={(this.state.PIN.length !==4) ? true : false} onClick={this.onAuthenticate} >Logg inn</button><button onClick={this.onCancel}>Avbryt</button>
+            </div>
+          );
+      }
+    });
+
+    var UserInterface = React.createClass({
+      getInitialState: function() {
+        return {
+          ClientAddress: "10.172.2.1:2345",
+          Mode: "WAITING",
+          PendingMode: "",
+          Buttons: [{mode: "CHECKOUT", label: "UTLÅN", active: false, comment: ""},
+                   {mode: "CHECKIN", label: "INNLEVERING", active: false, comment: ""},
+                   {mode: "STATUS", label: "STATUS", active: false, comment: "lån og reserveringer"}],
+          Checkins: [],
+          Checkouts: [],
+          Pickups: [{item: "[cd] The Rollings Stones - Sticky fingers", status: "27/432"},
+                    {item: "[dvd] Norge rundt og rundt", status: "28/12"}],
+          Loans: [{item: "[bok] Frank Herbert - Dune", status: "forfaller 12/01/2014"},
+                     {item: "[bok] Knut Hamsun - Victoria", status: "forfaller 12/01/2014"},
+                     {item: "[cd] The Beatles - White album", status: "forfallt 29/12/2013"}],
+          Holdings:    [{item: "[bok] Knut Hamsun - Pan", status: "nr 3 i køen"},
+                     {item: "[dvd] Finding Nemo", status: "på vei"}],
+          Messages: [],
+          CheckoutDisabled: false,
+          Patron: false,
+          Modal: false
+        };
+      },
+      componentWillMount: function() {
+        c=new WebSocket('ws://{{.Host}}/ws?client={{.Client}}');
+        c.onopen = function() {
+          console.log("connected");
+          c.onmessage = function(resp) {
+            console.log(JSON.parse(resp.data));
+          };
+        };
+        c.onclose = function() {
+          console.log("disconected");
+            // TODO try to reconnecd SetInterval 1 sec
+          };
+      },
+      handleAuthenticate: function() {
+        this.setState({Modal: true});
+      },
+      handleCancelAuthenticate: function() {
+        this.setState({Modal: false});
+      },
+      onLogin: function(name) {
+        var mode = this.state.PendingMode;
+        this.setState({Patron: name, Modal: false, Mode: mode, PendingMode: ""});
+        this.setState({Buttons: this.state.Buttons.map(function(b) {
+          return {active: (b.mode === mode) ? true : false,
+                 label: b.label, comment: b.comment, mode: b.mode}
+        })});
+        c.send(JSON.stringify({"action": "LOGIN", "username":name, "pin": "vetikke"}));
+      },
+      changeMode: function(mode) {
+        if (mode !== "CHECKIN" && !this.state.Patron) {
+          this.setState({PendingMode: mode});
+          this.handleAuthenticate();
+          return;
+        }
+        this.setState({Mode: mode, PendingMode: ""});
+        this.setState({Buttons: this.state.Buttons.map(function(b) {
+          return {active: (b.mode === mode) ? true : false,
+                 label: b.label, comment: b.comment, mode: b.mode}
+        })});
+      },
+      handleLogout: function() {
+        this.setState(this.getInitialState());
+      },
+      render: function() {
+        var that = this;
+        var buttons = this.state.Buttons.map(function(e,i) {
+          return (
+            <BigButton mode={that.state.Mode} handleClick={that.changeMode.bind(null, e.mode)} data={e} key={i} />
+            );
+        });
+        var maybeOverlay = function(self) {
+          if (self.state.Modal) {
+            return (
+              <div id="overlay">
+                <Authenticate cancel={self.handleCancelAuthenticate} login={self.onLogin} />
+              </div>
+              );
+          }
+        };
+        return (
+          <div id="page-wrap">
+            <Header ClientAddress={this.state.ClientAddress} />
+            <PatronBar mode={this.state.Mode} logout={this.handleLogout} patron={this.state.Patron} />
+            <div className={this.state.Mode === 'WAITING' ? 'clearfix' : 'clearfix smaller'}>
+              {buttons}
+            </div>
+            <CheckinList mode={this.state.Mode} checkins={this.state.Checkins} />
+            <CheckoutList mode={this.state.Mode} checkouts={this.state.Checkouts} />
+            <StatusList
+              mode={this.state.Mode}
+              pickups={this.state.Pickups}
+              loans={this.state.Loans}
+              holdings={this.state.Holdings}/>
+              {maybeOverlay(this)}
+          </div>
+          );
+      }
+    });
+
+    React.renderComponent(<UserInterface />, document.getElementById('content') );
   </script>
+
+
 </body>
 
 </html>

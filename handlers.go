@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"html/template"
 	"log"
 	"net/http"
 	"time"
@@ -32,11 +33,13 @@ func uiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	data := struct {
-		Host   string
-		Client string
+		Host      string
+		Client    string
+		JSXPragma template.JS
 	}{
 		r.Host,
 		v.Get("client"),
+		template.JS("/** @jsx React.DOM */"),
 	}
 	err := templates.ExecuteTemplate(w, "ui.html", data)
 	if err != nil {

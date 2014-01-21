@@ -47,6 +47,8 @@ func main() {
 	// HTTP handlers
 	http.HandleFunc("/css/styles.css", serveFile("data/css/styles.css"))
 	http.HandleFunc("/.status", statusHandler)
+	http.HandleFunc("/js/JSXTransformer-0.8.0.js", serveFile("data/js/JSXTransformer-0.8.0.js"))
+	http.HandleFunc("/js/react-with-addons-0.8.0.js", serveFile("data/js/react-with-addons-0.8.0.js"))
 	http.HandleFunc("/ws", wsHandler)
 	http.HandleFunc("/ui", uiHandler)
 	http.HandleFunc("/", monitorHandler)
