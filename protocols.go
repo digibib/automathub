@@ -22,8 +22,8 @@ type RFIDResponse struct {
 	Barcode  string
 }
 
-func parseRFIDResponse(b []byte) (*RFIDresponse, error) {
-	var resp *RFIDresponse
+func parseRFIDResponse(b []byte) (*RFIDResponse, error) {
+	var resp *RFIDResponse
 	err := json.Unmarshal(b, resp)
 	if err != nil {
 		return resp, err
@@ -31,8 +31,8 @@ func parseRFIDResponse(b []byte) (*RFIDresponse, error) {
 	return resp, nil
 }
 
-func parseRFIDRequest(b []byte) (*RFIDrequest, error) {
-	var req *RFIDrequest
+func parseRFIDRequest(b []byte) (*RFIDRequest, error) {
+	var req *RFIDRequest
 	err := json.Unmarshal(b, req)
 	if err != nil {
 		return req, err
@@ -50,7 +50,7 @@ type UIRequest struct {
 }
 
 // response from the state machine to UI
-type UIRespoinse struct {
+type UIResponse struct {
 	Action  string
 	Status  string
 	Message string

@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"net"
+	"regexp"
 	"time"
 )
 
@@ -17,6 +20,10 @@ const (
 
 	// 11: Checkout
 	sipMsg11 = "11YN%v%vAO<institutionid>|AA%s|AB%s|AC<terminalpassword>|"
+)
+
+var (
+	rAuthenticated = regexp.MustCompile(`\|CQY\|`)
 )
 
 // TODO investigate SIP fileds, do Koha need them to be filled out?:
@@ -37,4 +44,17 @@ func sipFormMsgCheckin(dept, barcode string) string {
 func sipFormMsgCheckout(username, barcode string) string {
 	now := time.Now().Format(sipDateLayout)
 	return fmt.Sprintf(sipMsg11, now, now, username, barcode)
+}
+
+func PatronAuthenticate(conn net.Conn, dept, username, pin string) bool {
+	_, err := conn.Write([]byte(sipFormMsgAuthenticate(dept, username, pin)))
+	if err != nil {
+		return false
+	}
+	r := bufio.NewReader(conn)
+	msg, err := r.ReadString('\r') // blocks! nothing coming from sip
+	if err != nil {
+		return false
+	}
+	return rAuthenticated.MatchString(msg)
 }

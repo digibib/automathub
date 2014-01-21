@@ -12,7 +12,7 @@ profile: build
 	go tool pprof ./automathub ./prof.out
 
 run:
-	go run main.go automat.go config.go tcp.go handlers.go metrics.go ws.go --race
+	go run main.go automat.go config.go tcp.go handlers.go metrics.go ws.go protocols.go sip.go --race
 
 todo:
 	@grep -rn TODO * || true

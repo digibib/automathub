@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"log"
 	"net"
 	"strings"
@@ -24,8 +25,10 @@ const (
 // Automat is a state machine for the automats. It recieves communcations
 // from RFID service, User Interface and communicates with the SIP server.
 type Automat struct {
-	State uiState
-	IP    string // remote address of the automat
+	State         uiState
+	Authenticated bool   // logged in or not
+	IP            string // remote address of the automat
+	Dept          string // department (SIP: institution id)
 
 	// SIP connection (via TCP)
 	// This is closed when as long as State is uiWAITING, otherwise keep alive
@@ -59,6 +62,21 @@ func newAutomat(c net.Conn) *Automat {
 	}
 }
 
+// connect to SIP server
+func (a *Automat) ensureSIPConnection() {
+	conn, err := net.Dial("tcp", cfg.SIPServer)
+	if err != nil {
+		// TODO return & handle connection error
+		return
+	}
+	a.SIPConn = conn
+}
+
+// disconnect from SIP server
+func (a *Automat) closeSIPConnection() {
+
+}
+
 // run the Automat state machine & message handler
 func (a *Automat) run() {
 	for {
@@ -68,6 +86,30 @@ func (a *Automat) run() {
 			log.Println("<- RFID:", strings.TrimRight(string(msg), "\n"))
 		case msg := <-a.FromUI:
 			log.Println("<- UI", strings.TrimRight(string(msg), "\n"))
+			var uiMsg UIRequest
+			err := json.Unmarshal(msg, &uiMsg)
+			if err != nil {
+				a.ToUI <- []byte(`{"error": "something went wrong, not your fault!"}`)
+			} else {
+				switch uiMsg.Action {
+				case "LOGIN":
+					a.ensureSIPConnection()
+					// TODO this hangs/blocks:
+					authenticated := PatronAuthenticate(a.SIPConn, a.Dept, uiMsg.Username, uiMsg.PIN)
+					if authenticated {
+						a.Authenticated = true
+						a.ToUI <- []byte(`{"action": "LOGIN", "status": true}`)
+					} else {
+						a.Authenticated = false
+						a.ToUI <- []byte(`{"action": "LOGIN", "status": false}`)
+					}
+				case "LOGOUT":
+					a.State = uiWAITING
+					a.Authenticated = false
+					a.closeSIPConnection()
+					a.ToUI <- []byte(`{"action": "LOGOUT", "status": true}`)
+				}
+			}
 		case <-a.Quit:
 			// cleanup: close channels & connections
 			close(a.ToUI)

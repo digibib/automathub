@@ -12,6 +12,7 @@ type automat struct {
 }
 
 type config struct {
+	SIPServer string
 	TCPServer string
 	TCPPort   string
 	HTTPPort  string
