@@ -11,9 +11,10 @@ type automat struct {
 }
 
 type config struct {
-	TCPPort  string
-	HTTPPort string
-	Automats []automat
+	TCPServer string
+	TCPPort   string
+	HTTPPort  string
+	Automats  []automat
 }
 
 func (c *config) fromFile(file string) error {

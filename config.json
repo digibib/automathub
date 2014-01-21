@@ -1,6 +1,7 @@
 {
 	"TCPPort": "6666",
 	"HTTPPort": "9000",
+	"SIPServer": "knakk.deichman.no:6001",
 	"Automats": [
 		{"IP": "10.172.2.123", "Name": "Hoved.Venstre1"},
 		{"IP": "10.172.2.124", "Name": "Hoved.Venstre2"},
