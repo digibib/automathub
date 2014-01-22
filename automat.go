@@ -83,11 +83,13 @@ func (a *Automat) ensureSIPConnection() {
 		// TODO handle this
 		println(err)
 	}
+	log.Println("-> SIP", strings.Trim(sipMsg93, "\n\r"))
 	msg, err := a.SIPReader.ReadString('\r')
 	if err != nil {
+		// TODO handle this
 		println(err)
 	}
-	println(msg)
+	log.Println("<- SIP", strings.Trim(msg, "\n\r"))
 }
 
 // disconnect from SIP server
@@ -114,7 +116,6 @@ func (a *Automat) run() {
 				switch uiMsg.Action {
 				case "LOGIN":
 					a.ensureSIPConnection()
-					// TODO this hangs/blocks:
 					authenticated := PatronAuthenticate(a, uiMsg.Username, uiMsg.PIN)
 					if authenticated {
 						a.Authenticated = true
