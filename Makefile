@@ -19,6 +19,7 @@ todo:
 	@grep -rn println * || true
 
 test:
+	go test -i
 	go test
 
 integration:
