@@ -83,11 +83,13 @@ func (a *Automat) ensureSIPConnection() {
 		// TODO handle this
 		println(err)
 	}
+	log.Println("-> SIP", strings.Trim(sipMsg93, "\n\r"))
 	msg, err := a.SIPReader.ReadString('\r')
 	if err != nil {
+		// TODO handle this
 		println(err)
 	}
-	println(msg)
+	log.Println("<- SIP", strings.Trim(msg, "\n\r"))
 }
 
 // disconnect from SIP server

@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -48,16 +50,18 @@ func sipFormMsgCheckout(username, barcode string) string {
 }
 
 func PatronAuthenticate(a *Automat, username, pin string) bool {
-	_, err := a.SIPConn.Write([]byte(sipFormMsgAuthenticate(a.Dept, username, pin)))
+	sipUt := sipFormMsgAuthenticate(a.Dept, username, pin)
+	_, err := a.SIPConn.Write([]byte(sipUt))
 	if err != nil {
+		println(err)
 		return false
 	}
-	println("sent sip auth reqeust")
-	msg, err := a.SIPReader.ReadString('\r')
+	log.Println("-> SIP", strings.Trim(sipUt, "\n\r"))
+	sipIn, err := a.SIPReader.ReadString('\r')
 	if err != nil {
+		println(err)
 		return false
 	}
-	println("got sip auth response")
-	println(msg)
-	return rAuthenticated.MatchString(msg)
+	log.Println("<- SIP", strings.Trim(sipIn, "\n\r"))
+	return rAuthenticated.MatchString(sipIn)
 }
