@@ -81,10 +81,10 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		select {
 		case a := <-server.get(v.Get("client")):
 			a.ws = ws
-			log.Println("UI  ", a.IP, "connected")
+			log.Println("UI", a.IP, "connected")
 
 			defer func() {
-				log.Println("UI  ", a.IP, "disconnected")
+				log.Println("UI", a.IP, "disconnected")
 				//close(a.ToUI)
 				go a.ws.Close()
 			}()
