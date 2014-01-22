@@ -259,7 +259,7 @@
         this.props.cancel();
       },
       onAuthenticate: function() {
-        this.props.login(this.state.Name);
+        this.props.login(this.state.Name, this.state.PIN);
         this.setState(this.getInitialState());
       },
       onKeyFinish: function(e) {
@@ -332,14 +332,14 @@
       handleCancelAuthenticate: function() {
         this.setState({Modal: false});
       },
-      onLogin: function(name) {
+      onLogin: function(name, pin) {
         var mode = this.state.PendingMode;
         this.setState({Patron: name, Modal: false, Mode: mode, PendingMode: ""});
         this.setState({Buttons: this.state.Buttons.map(function(b) {
           return {active: (b.mode === mode) ? true : false,
                  label: b.label, comment: b.comment, mode: b.mode}
         })});
-        c.send(JSON.stringify({"action": "LOGIN", "username":name, "pin": "vetikke"}));
+        c.send(JSON.stringify({"action": "LOGIN", "username":name, "pin": pin}));
       },
       changeMode: function(mode) {
         if (mode !== "CHECKIN" && !this.state.Patron) {

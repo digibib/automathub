@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"net"
 	"regexp"
 	"time"
 )
@@ -11,6 +9,9 @@ import (
 const (
 	// Transaction date format
 	sipDateLayout = "20060102    150405"
+
+	// 93: Login (established SIP connection)
+	sipMsg93 = "9300CNstresstest1|COstresstest1|CPHUTL|\r"
 
 	// 63: Patron information request
 	sipMsg63 = "63012%v          AO%s|AA%s|AC<terminalpassword>|AD%s|BP000|BQ9999|\r"
@@ -46,15 +47,17 @@ func sipFormMsgCheckout(username, barcode string) string {
 	return fmt.Sprintf(sipMsg11, now, now, username, barcode)
 }
 
-func PatronAuthenticate(conn net.Conn, dept, username, pin string) bool {
-	_, err := conn.Write([]byte(sipFormMsgAuthenticate(dept, username, pin)))
+func PatronAuthenticate(a *Automat, username, pin string) bool {
+	_, err := a.SIPConn.Write([]byte(sipFormMsgAuthenticate(a.Dept, username, pin)))
 	if err != nil {
 		return false
 	}
-	r := bufio.NewReader(conn)
-	msg, err := r.ReadString('\r') // blocks! nothing coming from sip
+	println("sent sip auth reqeust")
+	msg, err := a.SIPReader.ReadString('\r')
 	if err != nil {
 		return false
 	}
+	println("got sip auth response")
+	println(msg)
 	return rAuthenticated.MatchString(msg)
 }

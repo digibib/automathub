@@ -16,6 +16,7 @@ type uiState uint8
 const (
 	// possible UI states:
 	uiWAITING uiState = iota
+	uiLOGGEDIN
 	uiCHECKIN
 	uiCHECKOUT
 	uiSTATUS
@@ -33,7 +34,8 @@ type Automat struct {
 	// SIP connection (via TCP)
 	// This is closed when as long as State is uiWAITING, otherwise keep alive
 	// to reuse TCP connection.
-	SIPConn net.Conn
+	SIPConn   net.Conn
+	SIPReader *bufio.Reader
 
 	// Communication with the RFID service (via TCP)
 	RFIDconn net.Conn
@@ -64,17 +66,35 @@ func newAutomat(c net.Conn) *Automat {
 
 // connect to SIP server
 func (a *Automat) ensureSIPConnection() {
+	if a.SIPConn != nil {
+		return
+	}
 	conn, err := net.Dial("tcp", cfg.SIPServer)
 	if err != nil {
 		// TODO return & handle connection error
+		println(err)
 		return
 	}
 	a.SIPConn = conn
+	a.SIPReader = bufio.NewReader(a.SIPConn)
+	// send sip login message
+	_, err = a.SIPConn.Write([]byte(sipMsg93))
+	if err != nil {
+		// TODO handle this
+		println(err)
+	}
+	msg, err := a.SIPReader.ReadString('\r')
+	if err != nil {
+		println(err)
+	}
+	println(msg)
 }
 
 // disconnect from SIP server
 func (a *Automat) closeSIPConnection() {
-
+	a.SIPConn.Close()
+	a.SIPConn = nil
+	a.SIPReader = nil
 }
 
 // run the Automat state machine & message handler
@@ -95,7 +115,7 @@ func (a *Automat) run() {
 				case "LOGIN":
 					a.ensureSIPConnection()
 					// TODO this hangs/blocks:
-					authenticated := PatronAuthenticate(a.SIPConn, a.Dept, uiMsg.Username, uiMsg.PIN)
+					authenticated := PatronAuthenticate(a, uiMsg.Username, uiMsg.PIN)
 					if authenticated {
 						a.Authenticated = true
 						a.ToUI <- []byte(`{"action": "LOGIN", "status": true}`)
