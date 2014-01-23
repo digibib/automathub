@@ -94,5 +94,5 @@ func authParse(s string) *UIResponse {
 	if fields["CQ"] == "Y" {
 		auth = true
 	}
-	return &UIResponse{Action: "LOGIN", Authenticated: auth}
+	return &UIResponse{Action: "LOGIN", Authenticated: auth, Patron: fields["AA"]}
 }

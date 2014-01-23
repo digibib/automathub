@@ -56,9 +56,10 @@ func TestFieldPairs(t *testing.T) {
 
 func TestSIPPatronAuthentication(t *testing.T) {
 	specs := specs.New(t)
-	a := fakeAutomat("64              01220140123    093212000000030003000000000000AOHUTL|AA2|AEFillip Wahl|BLY|CQY|CC5|PCPT|PIY|AFGreetings from Koha. |\r")
-	res, err := DoSIPCall(a, sipFormMsgAuthenticate("HUTL", "2", "pass"), authParse)
+	a := fakeAutomat("64              01220140123    093212000000030003000000000000AOHUTL|AApatronid1|AEFillip Wahl|BLY|CQY|CC5|PCPT|PIY|AFGreetings from Koha. |\r")
+	res, err := DoSIPCall(a, sipFormMsgAuthenticate("HUTL", "patronid1", "pass"), authParse)
 
 	specs.ExpectNil(err)
 	specs.Expect(true, res.Authenticated)
+	specs.Expect("patronid1", res.Patron)
 }
