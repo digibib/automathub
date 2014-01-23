@@ -31,10 +31,7 @@ type Automat struct {
 	Dept          string // department (SIP: institution id)
 
 	// SIP connection (via TCP)
-	// This is closed when as long as State is uiWAITING, otherwise keep alive
-	// to reuse TCP connection.
-	SIPConn   net.Conn
-	SIPReader *bufio.Reader
+	SIPConn net.Conn
 
 	// Communication with the RFID service (via TCP)
 	RFIDconn net.Conn
@@ -63,43 +60,35 @@ func newAutomat(c net.Conn) *Automat {
 	}
 }
 
-// connect to SIP server
-func (a *Automat) ensureSIPConnection() {
-	if a.SIPConn != nil {
-		return
-	}
-	conn, err := net.Dial("tcp", cfg.SIPServer)
-	if err != nil {
-		// TODO return & handle connection error
-		println(err)
-		return
-	}
-	a.SIPConn = conn
-	a.SIPReader = bufio.NewReader(a.SIPConn)
-	// send sip login message
-	_, err = a.SIPConn.Write([]byte(sipMsg93))
-	if err != nil {
-		// TODO handle this
-		println(err)
-	}
-	log.Println("-> SIP", strings.Trim(sipMsg93, "\n\r"))
-	msg, err := a.SIPReader.ReadString('\r')
-	if err != nil {
-		// TODO handle this
-		println(err)
-	}
-	log.Println("<- SIP", strings.Trim(msg, "\n\r"))
-}
-
-// disconnect from SIP server
-func (a *Automat) closeSIPConnection() {
-	a.SIPConn.Close()
-	a.SIPConn = nil
-	a.SIPReader = nil
-}
-
 // run the Automat state machine & message handler
 func (a *Automat) run() {
+	// Create SIP connection
+	go func() {
+		sipConn, err := net.Dial("tcp", cfg.SIPServer)
+		if err != nil {
+			log.Println("ERROR", err)
+			a.Quit <- true
+			return
+		}
+		a.SIPConn = sipConn
+		// send sip login message
+		_, err = a.SIPConn.Write([]byte(sipMsg93))
+		if err != nil {
+			log.Println("ERROR", err)
+			a.Quit <- true
+		}
+		log.Println("-> SIP", strings.Trim(sipMsg93, "\n\r"))
+
+		reader := bufio.NewReader(a.SIPConn)
+		msg, err := reader.ReadString('\r')
+		if err != nil {
+			log.Println("ERROR", err)
+			a.Quit <- true
+		}
+		log.Println("<- SIP", strings.Trim(msg, "\n\r"))
+	}()
+
+	// run the state matchine
 	for {
 		select {
 		case msg := <-a.FromRFID:
@@ -114,7 +103,6 @@ func (a *Automat) run() {
 			} else {
 				switch uiMsg.Action {
 				case "LOGIN":
-					a.ensureSIPConnection()
 					authRes, err := DoSIPCall(a, sipFormMsgAuthenticate(a.Dept, uiMsg.Username, uiMsg.PIN), authParse)
 					if err != nil {
 						a.ToUI <- []byte(`{"error": "something went wrong, not your fault!"}`)
@@ -126,11 +114,11 @@ func (a *Automat) run() {
 						a.ToUI <- []byte(`{"error": "something went wrong, not your fault!"}`)
 						break
 					}
+					a.Authenticated = authRes.Authenticated
 					a.ToUI <- bRes
 				case "LOGOUT":
 					a.State = uiWAITING
 					a.Authenticated = false
-					a.closeSIPConnection()
 					a.ToUI <- []byte(`{"action": "LOGOUT", "status": true}`)
 				}
 			}
@@ -139,6 +127,8 @@ func (a *Automat) run() {
 			close(a.ToUI)
 			close(a.ToRFID)
 			log.Println("shutting down state machine", a.IP)
+			a.SIPConn.Close()
+			a.SIPConn = nil
 			return
 		}
 	}
@@ -150,6 +140,7 @@ func (a *Automat) tcpReader() {
 	for {
 		msg, err := r.ReadBytes('\n')
 		if err != nil {
+			a.Quit <- true
 			break
 		}
 		a.FromRFID <- msg
