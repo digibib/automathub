@@ -387,6 +387,8 @@
         })});
       },
       handleLogout: function() {
+        // send state-change message to server:
+        c.send(JSON.stringify({"Action": "LOGOUT"}));
         this.setState(this.getInitialState());
       },
       render: function() {

@@ -118,14 +118,17 @@ func (a *Automat) run() {
 					a.ToUI <- bRes
 				case "CHECKIN":
 					a.State = uiCHECKIN
+					a.ToRFID <- []byte("scan for tags (checkin)!\n")
 				case "CHECKOUT":
 					a.State = uiCHECKOUT
+					a.ToRFID <- []byte("scan for tags (checkout)!\n")
 				case "STATUS":
 					a.State = uiSTATUS
 				case "LOGOUT":
 					a.State = uiWAITING
 					a.Authenticated = false
 					a.ToUI <- []byte(`{"action": "LOGOUT", "status": true}`)
+					a.ToRFID <- []byte("stop scannig for tags (logout)!\n")
 				}
 			}
 		case <-a.Quit:
