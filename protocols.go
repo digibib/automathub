@@ -55,4 +55,17 @@ type UIResponse struct {
 	Status        string
 	Authenticated bool
 	Message       string
+	Error         bool
+	ErrorDetails  string
+}
+
+func ErrorResponse(errMsg error) []byte {
+	b, err := json.Marshal(&UIResponse{
+		Error:        true,
+		Message:      "Noe gikk galt, det er ikke din feil!",
+		ErrorDetails: errMsg.Error()})
+	if err != nil {
+		return []byte(`{"Error": true, "Message": "something went wrong, not your fault!", "ErrorDetails": "kuk i kompjuderen"}`)
+	}
+	return b
 }

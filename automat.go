@@ -99,19 +99,19 @@ func (a *Automat) run() {
 			var uiMsg UIRequest
 			err := json.Unmarshal(msg, &uiMsg)
 			if err != nil {
-				a.ToUI <- []byte(`{"error": "something went wrong, not your fault!"}`)
+				a.ToUI <- ErrorResponse(err)
 			} else {
 				switch uiMsg.Action {
 				case "LOGIN":
 					authRes, err := DoSIPCall(a, sipFormMsgAuthenticate(a.Dept, uiMsg.Username, uiMsg.PIN), authParse)
 					if err != nil {
-						a.ToUI <- []byte(`{"error": "something went wrong, not your fault!"}`)
+						a.ToUI <- ErrorResponse(err)
 						break
 					}
 
 					bRes, err := json.Marshal(authRes)
 					if err != nil {
-						a.ToUI <- []byte(`{"error": "something went wrong, not your fault!"}`)
+						a.ToUI <- ErrorResponse(err)
 						break
 					}
 					a.Authenticated = authRes.Authenticated
