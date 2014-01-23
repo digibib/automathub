@@ -60,33 +60,35 @@ func newAutomat(c net.Conn) *Automat {
 	}
 }
 
+func sipConnect(a *Automat) {
+	sipConn, err := net.Dial("tcp", cfg.SIPServer)
+	if err != nil {
+		log.Println("ERROR", err)
+		a.Quit <- true
+		return
+	}
+	a.SIPConn = sipConn
+	// send sip login message
+	_, err = a.SIPConn.Write([]byte(sipMsg93))
+	if err != nil {
+		log.Println("ERROR", err)
+		a.Quit <- true
+	}
+	log.Println("-> SIP", strings.Trim(sipMsg93, "\n\r"))
+
+	reader := bufio.NewReader(a.SIPConn)
+	msg, err := reader.ReadString('\r')
+	if err != nil {
+		log.Println("ERROR", err)
+		a.Quit <- true
+	}
+	log.Println("<- SIP", strings.Trim(msg, "\n\r"))
+}
+
 // run the Automat state machine & message handler
 func (a *Automat) run() {
 	// Create SIP connection
-	go func() {
-		sipConn, err := net.Dial("tcp", cfg.SIPServer)
-		if err != nil {
-			log.Println("ERROR", err)
-			a.Quit <- true
-			return
-		}
-		a.SIPConn = sipConn
-		// send sip login message
-		_, err = a.SIPConn.Write([]byte(sipMsg93))
-		if err != nil {
-			log.Println("ERROR", err)
-			a.Quit <- true
-		}
-		log.Println("-> SIP", strings.Trim(sipMsg93, "\n\r"))
-
-		reader := bufio.NewReader(a.SIPConn)
-		msg, err := reader.ReadString('\r')
-		if err != nil {
-			log.Println("ERROR", err)
-			a.Quit <- true
-		}
-		log.Println("<- SIP", strings.Trim(msg, "\n\r"))
-	}()
+	go sipConnect(a)
 
 	// run the state matchine
 	for {
