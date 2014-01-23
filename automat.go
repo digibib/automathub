@@ -116,6 +116,12 @@ func (a *Automat) run() {
 					}
 					a.Authenticated = authRes.Authenticated
 					a.ToUI <- bRes
+				case "CHECKIN":
+					a.State = uiCHECKIN
+				case "CHECKOUT":
+					a.State = uiCHECKOUT
+				case "STATUS":
+					a.State = uiSTATUS
 				case "LOGOUT":
 					a.State = uiWAITING
 					a.Authenticated = false

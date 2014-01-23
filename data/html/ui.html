@@ -337,6 +337,7 @@
                 console.log("authenticated:", r.Authenticated)
                 if (r.Authenticated) {
                   var mode = uiThis.state.PendingMode;
+                  c.send(JSON.stringify({"Action": mode}));
                   uiThis.setState({Patron: r.Patron, Modal: false, Mode: mode, PendingMode: ""});
                   uiThis.setState({Buttons: uiThis.state.Buttons.map(function(b) {
                     return {active: (b.mode === mode) ? true : false,
@@ -376,6 +377,9 @@
           this.handleAuthenticate();
           return;
         }
+        // send state-change message to server:
+        c.send(JSON.stringify({"Action": mode}));
+
         this.setState({Mode: mode, PendingMode: ""});
         this.setState({Buttons: this.state.Buttons.map(function(b) {
           return {active: (b.mode === mode) ? true : false,
