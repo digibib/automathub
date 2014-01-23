@@ -24,8 +24,8 @@ func (c fakeTCPConn) SetDeadline(t time.Time) error      { return nil }
 func (c fakeTCPConn) SetReadDeadline(t time.Time) error  { return nil }
 func (c fakeTCPConn) SetWriteDeadline(t time.Time) error { return nil }
 
-// fakeAutomat creates a fake Automat with a mocked connection with teturns
-// the suplied sipResponse when read from.
+// fakeAutomat creates a fake Automat with a mocked connection witch returns
+// the supplied sipResponse when read from.
 func fakeAutomat(sipResponse string) *Automat {
 	var c fakeTCPConn
 	bufferWriter := bufio.NewWriter(&c.buffer)
@@ -61,5 +61,4 @@ func TestSIPPatronAuthentication(t *testing.T) {
 
 	specs.ExpectNil(err)
 	specs.Expect(true, res.Authenticated)
-
 }
