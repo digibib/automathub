@@ -8,7 +8,7 @@ import (
 
 type TCPServer struct {
 	listenAddr string
-	// TOOD this map should use only IP as key, but use ip+port for now
+	// TODO this map should use only IP as key, but use ip+port for now
 	// so integration test is easy on localhost (=same ip for all connections)
 	connections map[string]*Automat
 	addChan     chan *Automat

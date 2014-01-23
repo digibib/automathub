@@ -61,6 +61,9 @@ func newAutomat(c net.Conn) *Automat {
 }
 
 func sipConnect(a *Automat) {
+	// TODO send UI message if err (plus stop RFIDservice)
+	//      then try to reconnect
+	// TODO set timeouts to short value (1-2-3 sec?)
 	sipConn, err := net.Dial("tcp", cfg.SIPServer)
 	if err != nil {
 		log.Println("ERROR", err)
