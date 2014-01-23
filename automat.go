@@ -126,7 +126,7 @@ func (a *Automat) run() {
 			// cleanup: close channels & connections
 			close(a.ToUI)
 			close(a.ToRFID)
-			log.Println("shutting down state machine", a.IP)
+			log.Println("INFO", "shutting down state machine", a.IP)
 			a.SIPConn.Close()
 			a.SIPConn = nil
 			return
