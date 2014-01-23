@@ -59,15 +59,11 @@ func pairFieldIDandValue(msg string) map[string]string {
 // returns the JSON message to be sent to the user interface.
 type parserFunc func(string) *UIResponse
 
-// DoSIPCall performs a SIP request with the a's SIP TCP-connection. It takes
-// a SIP message as a string and a parser function to transform the SIP
-// response into a JSON message
+// DoSIPCall performs a SIP request with an automat's SIP TCP-connection. It
+// takes a SIP message as a string and a parser function to transform the SIP
+// response into a UIResponse.
 func DoSIPCall(a *Automat, req string, parser parserFunc) (*UIResponse, error) {
-	// 1. Ensure we have a TCP SIP connection
-
-	// TODO conn peek?
-
-	// 2. Send the SIP request
+	// 1. Send the SIP request
 	_, err := a.SIPConn.Write([]byte(req))
 	if err != nil {
 		return nil, err
@@ -75,7 +71,7 @@ func DoSIPCall(a *Automat, req string, parser parserFunc) (*UIResponse, error) {
 
 	log.Println("-> SIP", strings.Trim(req, "\n\r"))
 
-	// 3. Read SIP response
+	// 2. Read SIP response
 	reader := bufio.NewReader(a.SIPConn)
 	resp, err := reader.ReadString('\r')
 	if err != nil {
@@ -84,14 +80,14 @@ func DoSIPCall(a *Automat, req string, parser parserFunc) (*UIResponse, error) {
 
 	log.Println("<- SIP", strings.Trim(resp, "\n\r"))
 
-	// 4. Parse the response
+	// 3. Parse the response
 	res := parser(resp)
 
 	return res, nil
 }
 
 func authParse(s string) *UIResponse {
-	_, b := s[:61], s[61:] // TODO use the first part of sipmessage
+	_, b := s[:61], s[61:] // first part of SIPresponse not needed here
 	fields := pairFieldIDandValue(b)
 
 	var auth bool
