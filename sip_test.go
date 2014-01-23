@@ -1,31 +1,65 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
+	"io"
+	"net"
 	"testing"
+	"time"
 
 	"github.com/knakk/specs"
 )
 
-func TestMsgAuthenticate(t *testing.T) {
-	specs := specs.New(t)
-
-	msg := sipFormMsgAuthenticate("HUTL", "N0012341234", "9999")
-	specs.ExpectMatches(`^63012`, msg)
-	specs.ExpectMatches(`AOHUTL\|AAN0012341234\|AC<terminalpassword>\|AD9999\|BP000\|BQ9999\|\r$`, msg)
+// fakeTCPConn is a mock of the net.Conn interface
+type fakeTCPConn struct {
+	buffer bytes.Buffer
+	io.ReadWriter
 }
 
-func TestMsgCheckin(t *testing.T) {
-	specs := specs.New(t)
+func (c fakeTCPConn) Close() error                       { return nil }
+func (c fakeTCPConn) LocalAddr() net.Addr                { return nil }
+func (c fakeTCPConn) RemoteAddr() net.Addr               { return nil }
+func (c fakeTCPConn) SetDeadline(t time.Time) error      { return nil }
+func (c fakeTCPConn) SetReadDeadline(t time.Time) error  { return nil }
+func (c fakeTCPConn) SetWriteDeadline(t time.Time) error { return nil }
 
-	msg := sipFormMsgCheckin("HUTL", "0301234125789")
-	specs.ExpectMatches(`^09N`, msg)
-	specs.ExpectMatches(`AP<location>\|AOHUTL\|AB0301234125789\|AC<terminalpassword>\|\r$`, msg)
+// fakeAutomat creates a fake Automat with a mocked connection with teturns
+// the suplied sipResponse when read from.
+func fakeAutomat(sipResponse string) *Automat {
+	var c fakeTCPConn
+	bufferWriter := bufio.NewWriter(&c.buffer)
+	c.ReadWriter = bufio.NewReadWriter(
+		bufio.NewReader(bytes.NewBufferString(sipResponse)),
+		bufferWriter)
+	return &Automat{SIPConn: c}
 }
 
-func TestMsgCheckout(t *testing.T) {
-	specs := specs.New(t)
+func TestFieldPairs(t *testing.T) {
+	s := specs.New(t)
 
-	msg := sipFormMsgCheckout("N001234", "0301234125789")
-	specs.ExpectMatches(`^11YN`, msg)
-	specs.ExpectMatches(`AO<institutionid>\|AAN001234\|AB0301234125789\|AC<terminalpassword>\|\r$`, msg)
+	fields := pairFieldIDandValue("AOHUTL|AA2|AEFillip Wahl|BLY|CQY|CC5|PCPT|PIY|AFGreetings from Koha. |\r")
+	tests := []specs.Spec{
+		{9, len(fields)},
+		{"HUTL", fields["AO"]},
+		{"2", fields["AA"]},
+		{"Fillip Wahl", fields["AE"]},
+		{"Y", fields["BL"]},
+		{"Y", fields["CQ"]},
+		{"5", fields["CC"]},
+		{"PT", fields["PC"]},
+		{"Y", fields["PI"]},
+		{"Greetings from Koha. ", fields["AF"]},
+	}
+	s.ExpectAll(tests)
+}
+
+func TestSIPPatronAuthentication(t *testing.T) {
+	specs := specs.New(t)
+	a := fakeAutomat("64              01220140123    093212000000030003000000000000AOHUTL|AA2|AEFillip Wahl|BLY|CQY|CC5|PCPT|PIY|AFGreetings from Koha. |\r")
+	res, err := DoSIPCall(a, sipFormMsgAuthenticate("HUTL", "2", "pass"), authParse)
+
+	specs.ExpectNil(err)
+	specs.Expect(true, res.Authenticated)
+
 }

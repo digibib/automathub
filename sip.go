@@ -1,9 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 )
@@ -23,10 +23,6 @@ const (
 
 	// 11: Checkout
 	sipMsg11 = "11YN%v%vAO<institutionid>|AA%s|AB%s|AC<terminalpassword>|\r"
-)
-
-var (
-	rAuthenticated = regexp.MustCompile(`\|CQY\|`)
 )
 
 // TODO investigate SIP fileds, do Koha need them to be filled out?:
@@ -49,19 +45,58 @@ func sipFormMsgCheckout(username, barcode string) string {
 	return fmt.Sprintf(sipMsg11, now, now, username, barcode)
 }
 
-func PatronAuthenticate(a *Automat, username, pin string) bool {
-	sipUt := sipFormMsgAuthenticate(a.Dept, username, pin)
-	_, err := a.SIPConn.Write([]byte(sipUt))
-	if err != nil {
-		println(err)
-		return false
+func pairFieldIDandValue(msg string) map[string]string {
+	results := make(map[string]string)
+
+	for _, pair := range strings.Split(strings.TrimRight(msg, "|\r"), "|") {
+		id, val := pair[0:2], pair[2:]
+		results[id] = val
 	}
-	log.Println("-> SIP", strings.Trim(sipUt, "\n\r"))
-	sipIn, err := a.SIPReader.ReadString('\r')
+	return results
+}
+
+// A parserFunc parses a SIP response. It extracts the desired information and
+// returns the JSON message to be sent to the user interface.
+type parserFunc func(string) *UIResponse
+
+// DoSIPCall performs a SIP request with the a's SIP TCP-connection. It takes
+// a SIP message as a string and a parser function to transform the SIP
+// response into a JSON message
+func DoSIPCall(a *Automat, req string, parser parserFunc) (*UIResponse, error) {
+	// 1. Ensure we have a TCP SIP connection
+
+	// TODO conn peek?
+
+	// 2. Send the SIP request
+	_, err := a.SIPConn.Write([]byte(req))
 	if err != nil {
-		println(err)
-		return false
+		return nil, err
 	}
-	log.Println("<- SIP", strings.Trim(sipIn, "\n\r"))
-	return rAuthenticated.MatchString(sipIn)
+
+	log.Println("-> SIP", strings.Trim(req, "\n\r"))
+
+	// 3. Read SIP response
+	reader := bufio.NewReader(a.SIPConn)
+	resp, err := reader.ReadString('\r')
+	if err != nil {
+		return nil, err
+	}
+
+	log.Println("<- SIP", strings.Trim(resp, "\n\r"))
+
+	// 4. Parse the response
+	res := parser(resp)
+
+	return res, nil
+}
+
+func authParse(s string) *UIResponse {
+	_, b := s[:61], s[61:] // TODO use the first part of sipmessage
+	fields := pairFieldIDandValue(b)
+
+	var auth bool
+	if fields["CQ"] == "Y" {
+		auth = true
+	}
+	return &UIResponse{Action: "LOGIN", Authenticated: auth}
 }

@@ -51,7 +51,8 @@ type UIRequest struct {
 
 // response from the state machine to UI
 type UIResponse struct {
-	Action  string
-	Status  string
-	Message string
+	Action        string
+	Status        string
+	Authenticated bool
+	Message       string
 }

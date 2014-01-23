@@ -16,7 +16,6 @@ type uiState uint8
 const (
 	// possible UI states:
 	uiWAITING uiState = iota
-	uiLOGGEDIN
 	uiCHECKIN
 	uiCHECKOUT
 	uiSTATUS
@@ -116,14 +115,18 @@ func (a *Automat) run() {
 				switch uiMsg.Action {
 				case "LOGIN":
 					a.ensureSIPConnection()
-					authenticated := PatronAuthenticate(a, uiMsg.Username, uiMsg.PIN)
-					if authenticated {
-						a.Authenticated = true
-						a.ToUI <- []byte(`{"action": "LOGIN", "status": true}`)
-					} else {
-						a.Authenticated = false
-						a.ToUI <- []byte(`{"action": "LOGIN", "status": false}`)
+					authRes, err := DoSIPCall(a, sipFormMsgAuthenticate(a.Dept, uiMsg.Username, uiMsg.PIN), authParse)
+					if err != nil {
+						a.ToUI <- []byte(`{"error": "something went wrong, not your fault!"}`)
+						break
 					}
+
+					bRes, err := json.Marshal(authRes)
+					if err != nil {
+						a.ToUI <- []byte(`{"error": "something went wrong, not your fault!"}`)
+						break
+					}
+					a.ToUI <- bRes
 				case "LOGOUT":
 					a.State = uiWAITING
 					a.Authenticated = false
