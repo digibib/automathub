@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 )
 
 // Application state //////////////////////////////////////////////////////////
@@ -13,6 +14,7 @@ var (
 	cfg       *config
 	stats     *appMetrics
 	server    *TCPServer
+	logFile   *os.File
 	templates = template.Must(
 		template.ParseFiles("data/html/monitor.html", "data/html/ui.html"))
 )
@@ -20,8 +22,14 @@ var (
 // Setup //////////////////////////////////////////////////////////////////////
 
 func init() {
+	logFile, err := os.OpenFile("dev.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.SetOutput(logFile)
+
 	cfg = &config{}
-	err := cfg.fromFile("config.json")
+	err = cfg.fromFile("config.json")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -34,6 +42,7 @@ func init() {
 // Application entry point ////////////////////////////////////////////////////
 
 func main() {
+	defer logFile.Close()
 	// TCP server handles the communcation with the RFID-service on the
 	// self-checkin-automats, and spins up an automat state-machine for every
 	// connection.
