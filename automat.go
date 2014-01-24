@@ -29,6 +29,7 @@ type Automat struct {
 	Authenticated bool   // logged in or not
 	IP            string // remote address of the automat
 	Dept          string // department (SIP: institution id)
+	Patron        string // patron username
 
 	// SIP connection (via TCP)
 	SIPConn net.Conn
@@ -91,14 +92,45 @@ func sipConnect(a *Automat) {
 // run the Automat state machine & message handler
 func (a *Automat) run() {
 	// Create SIP connection
+	// TODO do this synchronously, no reason to continue to state machine without sip connection
 	go sipConnect(a)
 
 	// run the state matchine
 	for {
 		select {
 		case msg := <-a.FromRFID:
-			a.ToUI <- msg
 			log.Println("<- RFID:", strings.TrimRight(string(msg), "\n"))
+			// TODO work here tomorrow!!
+			rfidMsg, err := parseRFIDRequest(msg)
+			if err != nil {
+				log.Println("ERROR", err.Error())
+				// TODO respond to RFIDservise? and what?
+				break
+			}
+			log.Printf("DEBUG %+v", rfidMsg)
+			var sipRes *UIResponse
+			switch a.State {
+			case uiCHECKIN:
+				sipRes, err = DoSIPCall(a, sipFormMsgCheckin(a.Dept, rfidMsg.Barcode), checkinParse)
+				sipRes.Action = "CHECKIN"
+			case uiCHECKOUT:
+				sipRes, err = DoSIPCall(a, sipFormMsgCheckout(a.Patron, rfidMsg.Barcode), checkoutParse)
+				sipRes.Action = "CHECKOUT"
+			default:
+				log.Println("ERROR", "state: %+v | rfidmessage: %v", a.State, rfidMsg)
+				break
+			}
+			if err != nil {
+				log.Println(err)
+				// TODO now what?
+				break
+			}
+			bRes, err := json.Marshal(sipRes)
+			if err != nil {
+				a.ToUI <- ErrorResponse(err)
+				break
+			}
+			a.ToUI <- bRes
 		case msg := <-a.FromUI:
 			log.Println("<- UI", strings.TrimRight(string(msg), "\n"))
 			var uiMsg UIRequest
@@ -120,6 +152,9 @@ func (a *Automat) run() {
 						break
 					}
 					a.Authenticated = authRes.Authenticated
+					if a.Authenticated {
+						a.Patron = uiMsg.Username
+					}
 					a.ToUI <- bRes
 				case "CHECKIN":
 					a.State = uiCHECKIN
@@ -132,6 +167,7 @@ func (a *Automat) run() {
 				case "LOGOUT":
 					a.State = uiWAITING
 					a.Authenticated = false
+					a.Patron = ""
 					a.ToUI <- []byte(`{"action": "LOGOUT", "status": true}`)
 					a.ToRFID <- []byte("stop scannig for tags (logout)!\n")
 				}
@@ -140,9 +176,12 @@ func (a *Automat) run() {
 			// cleanup: close channels & connections
 			close(a.ToUI)
 			close(a.ToRFID)
+			close(a.FromRFID)
 			log.Println("INFO", "shutting down state machine", a.IP)
-			a.SIPConn.Close()
-			a.SIPConn = nil
+			if a.SIPConn != nil {
+				a.SIPConn.Close()
+				a.SIPConn = nil
+			}
 			return
 		}
 	}

@@ -22,18 +22,18 @@ type RFIDResponse struct {
 	Barcode  string
 }
 
-func parseRFIDResponse(b []byte) (*RFIDResponse, error) {
-	var resp *RFIDResponse
-	err := json.Unmarshal(b, resp)
+func parseRFIDResponse(b []byte) (RFIDResponse, error) {
+	var resp RFIDResponse
+	err := json.Unmarshal(b, &resp)
 	if err != nil {
 		return resp, err
 	}
 	return resp, nil
 }
 
-func parseRFIDRequest(b []byte) (*RFIDRequest, error) {
-	var req *RFIDRequest
-	err := json.Unmarshal(b, req)
+func parseRFIDRequest(b []byte) (RFIDRequest, error) {
+	var req RFIDRequest
+	err := json.Unmarshal(b, &req)
 	if err != nil {
 		return req, err
 	}
