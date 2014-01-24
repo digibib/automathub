@@ -57,6 +57,15 @@ type UIResponse struct {
 	Authenticated bool
 	Message       string
 	ErrorDetails  string
+	Item          item
+	// Loans         []item
+	// Holdings      []item
+}
+
+type item struct {
+	Title  string // [bok] Forfatter - tittel
+	Status string // forfaller 10/03/2013
+	OK     bool   // false = mangler brikke / klarte ikke lese den
 }
 
 func ErrorResponse(errMsg error) []byte {

@@ -87,7 +87,7 @@ func DoSIPCall(a *Automat, req string, parser parserFunc) (*UIResponse, error) {
 }
 
 func authParse(s string) *UIResponse {
-	_, b := s[:61], s[61:] // first part of SIPresponse not needed here
+	b := s[61:] // first part of SIPresponse not needed here
 	fields := pairFieldIDandValue(b)
 
 	var auth bool
@@ -95,4 +95,18 @@ func authParse(s string) *UIResponse {
 		auth = true
 	}
 	return &UIResponse{Action: "LOGIN", Authenticated: auth, Patron: fields["AA"]}
+}
+
+func checkinParse(s string) *UIResponse {
+	a, b := s[:24], s[24:]
+	var (
+		ok     bool
+		status string
+	)
+	if a[2] == '1' {
+		ok = true
+	}
+	fields := pairFieldIDandValue(b)
+	status = fmt.Sprintf("registrert innlevert %s/%s/%s", a[12:14], a[10:12], a[6:10])
+	return &UIResponse{Item: item{OK: ok, Title: fields["AJ"], Status: status}}
 }

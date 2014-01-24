@@ -55,11 +55,22 @@ func TestFieldPairs(t *testing.T) {
 }
 
 func TestSIPPatronAuthentication(t *testing.T) {
-	specs := specs.New(t)
+	s := specs.New(t)
 	a := fakeAutomat("64              01220140123    093212000000030003000000000000AOHUTL|AApatronid1|AEFillip Wahl|BLY|CQY|CC5|PCPT|PIY|AFGreetings from Koha. |\r")
 	res, err := DoSIPCall(a, sipFormMsgAuthenticate("HUTL", "patronid1", "pass"), authParse)
 
-	specs.ExpectNil(err)
-	specs.Expect(true, res.Authenticated)
-	specs.Expect("patronid1", res.Patron)
+	s.ExpectNil(err)
+	s.Expect(true, res.Authenticated)
+	s.Expect("patronid1", res.Patron)
+}
+
+func TestSIPCheckin(t *testing.T) {
+	s := specs.New(t)
+	a := fakeAutomat("101YNN20140124    093621AOHUTL|AB03011143299001|AQhvmu|AJ316 salmer og sanger|AA1|CS783.4|\r")
+	res, err := DoSIPCall(a, sipFormMsgCheckin("HUTL", "03011143299001"), checkinParse)
+
+	s.ExpectNil(err)
+	s.Expect(true, res.Item.OK)
+	s.Expect("316 salmer og sanger", res.Item.Title)
+	s.Expect("registrert innlevert 24/01/2014", res.Item.Status)
 }
