@@ -74,3 +74,15 @@ func TestSIPCheckin(t *testing.T) {
 	s.Expect("316 salmer og sanger", res.Item.Title)
 	s.Expect("registrert innlevert 24/01/2014", res.Item.Status)
 }
+
+func TestSIPCheckout(t *testing.T) {
+	s := specs.New(t)
+	a := fakeAutomat("121NNY20140124    110740AOHUTL|AA2|AB03011174511003|AJKrutt-Kim|AH20140221    235900|\r")
+	println(sipFormMsgCheckout("2", "03011174511003"))
+	res, err := DoSIPCall(a, sipFormMsgCheckout("2", "03011174511003"), checkoutParse)
+
+	s.ExpectNil(err)
+	s.Expect(true, res.Item.OK)
+	s.Expect("Krutt-Kim", res.Item.Title)
+	s.Expect("utlånt til 21/02/2014", res.Item.Status)
+}

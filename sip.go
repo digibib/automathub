@@ -110,3 +110,20 @@ func checkinParse(s string) *UIResponse {
 	status = fmt.Sprintf("registrert innlevert %s/%s/%s", a[12:14], a[10:12], a[6:10])
 	return &UIResponse{Item: item{OK: ok, Title: fields["AJ"], Status: status}}
 }
+
+func checkoutParse(s string) *UIResponse {
+	a, b := s[:40], s[40:]
+	var (
+		ok     bool
+		status string
+	)
+	fields := pairFieldIDandValue(b)
+	if a[2] == '1' {
+		ok = true
+		date := fields["AH"]
+		status = fmt.Sprintf("utlånt til %s/%s/%s", date[6:8], date[4:6], date[0:4])
+	} else {
+		status = "ikke lånt ut!"
+	}
+	return &UIResponse{Item: item{OK: ok, Status: status, Title: fields["AJ"]}}
+}
