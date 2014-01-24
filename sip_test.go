@@ -78,11 +78,17 @@ func TestSIPCheckin(t *testing.T) {
 func TestSIPCheckout(t *testing.T) {
 	s := specs.New(t)
 	a := fakeAutomat("121NNY20140124    110740AOHUTL|AA2|AB03011174511003|AJKrutt-Kim|AH20140221    235900|\r")
-	println(sipFormMsgCheckout("2", "03011174511003"))
 	res, err := DoSIPCall(a, sipFormMsgCheckout("2", "03011174511003"), checkoutParse)
 
 	s.ExpectNil(err)
 	s.Expect(true, res.Item.OK)
 	s.Expect("Krutt-Kim", res.Item.Title)
 	s.Expect("utlånt til 21/02/2014", res.Item.Status)
+
+	aFail := fakeAutomat("120NUN20140124    131049AOHUTL|AA2|AB1234|AJ|AH|AFInvalid Item|BLY|\r")
+	res, err = DoSIPCall(aFail, sipFormMsgCheckout("2", "1234"), checkoutParse)
+
+	s.ExpectNil(err)
+	s.Expect(false, res.Item.OK)
+	s.Expect("Invalid Item", res.Item.Status)
 }

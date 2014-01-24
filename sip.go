@@ -112,7 +112,7 @@ func checkinParse(s string) *UIResponse {
 }
 
 func checkoutParse(s string) *UIResponse {
-	a, b := s[:40], s[40:]
+	a, b := s[:24], s[24:]
 	var (
 		ok     bool
 		status string
@@ -123,7 +123,11 @@ func checkoutParse(s string) *UIResponse {
 		date := fields["AH"]
 		status = fmt.Sprintf("utlånt til %s/%s/%s", date[6:8], date[4:6], date[0:4])
 	} else {
-		status = "ikke lånt ut!"
+		if fields["AF"] == "1" {
+			status = "Failed! Don't know why; SIP should give more information"
+		} else {
+			status = fields["AF"]
+		}
 	}
 	return &UIResponse{Item: item{OK: ok, Status: status, Title: fields["AJ"]}}
 }
