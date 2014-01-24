@@ -7,6 +7,9 @@ build:
 	export GOBIN=$(shell pwd)
 	go build
 
+package: build
+        tar -cvzf automathub.tar.gz automathub config.json data/
+
 profile: build
 	go test -run none -bench . -benchtime 4s -cpuprofile=prof.out
 	go tool pprof ./automathub ./prof.out
