@@ -12,6 +12,8 @@ type automat struct {
 }
 
 type config struct {
+	LogFile   string
+	LogToFile bool
 	SIPServer string
 	TCPServer string
 	TCPPort   string

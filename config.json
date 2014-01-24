@@ -2,6 +2,8 @@
 	"TCPPort": "6666",
 	"HTTPPort": "9000",
 	"SIPServer": "knakk.deichman.no:6001",
+	"LogToFile": true,
+	"LogFile": "dev.log",
 	"Automats": [
 		{"IP": "10.172.2.123", "Name": "Hoved.Venstre1", "Department": "HUTL"},
 		{"IP": "10.172.2.124", "Name": "Hoved.Venstre2", "Department": "HUTL"},

@@ -22,14 +22,8 @@ var (
 // Setup //////////////////////////////////////////////////////////////////////
 
 func init() {
-	logFile, err := os.OpenFile("dev.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.SetOutput(logFile)
-
 	cfg = &config{}
-	err = cfg.fromFile("config.json")
+	err := cfg.fromFile("config.json")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -37,12 +31,23 @@ func init() {
 	stats = RegisterMetrics()
 
 	hub = NewHub()
+
+	if cfg.LogToFile {
+		logFile, err := os.OpenFile(cfg.LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.SetOutput(logFile)
+	}
+
 }
 
 // Application entry point ////////////////////////////////////////////////////
 
 func main() {
-	defer logFile.Close()
+	if cfg.LogToFile {
+		defer logFile.Close()
+	}
 	// TCP server handles the communcation with the RFID-service on the
 	// self-checkin-automats, and spins up an automat state-machine for every
 	// connection.
