@@ -8,7 +8,7 @@ build:
 	go build
 
 package: build
-        tar -cvzf automathub.tar.gz automathub config.json data/
+	tar -cvzf automathub.tar.gz automathub config.json data/
 
 profile: build
 	go test -run none -bench . -benchtime 4s -cpuprofile=prof.out
