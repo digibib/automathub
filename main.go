@@ -10,6 +10,7 @@ import (
 // Application state //////////////////////////////////////////////////////////
 
 var (
+	sipPool   *ConnPool
 	hub       *wsHub
 	cfg       *config
 	stats     *appMetrics
@@ -28,10 +29,6 @@ func init() {
 		log.Fatal(err)
 	}
 
-	stats = RegisterMetrics()
-
-	hub = NewHub()
-
 	if cfg.LogToFile {
 		logFile, err := os.OpenFile(cfg.LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
@@ -39,6 +36,15 @@ func init() {
 		}
 		log.SetOutput(logFile)
 	}
+
+	log.Println("INFO", "Creating SIP Connection pool with size:", cfg.NumSIPConnections)
+	sipPool = NewSIPConnPool(cfg.NumSIPConnections)
+
+	log.Println("INFO", "Registering metrics")
+	stats = RegisterMetrics()
+
+	log.Println("INFO", "Starting Websocket server")
+	hub = NewHub()
 
 }
 
@@ -51,6 +57,7 @@ func main() {
 	// TCP server handles the communcation with the RFID-service on the
 	// self-checkin-automats, and spins up an automat state-machine for every
 	// connection.
+	log.Println("INFO", "Starting TCP server")
 	server = newTCPServer(cfg)
 	go server.run()
 
@@ -68,6 +75,7 @@ func main() {
 	http.HandleFunc("/", monitorHandler)
 
 	// HTTP Server
+	log.Println("INFO", "Starting HTTP server")
 	err := http.ListenAndServe(":"+cfg.HTTPPort, nil)
 	if err != nil {
 		log.Fatal(err)

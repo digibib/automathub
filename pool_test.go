@@ -5,8 +5,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	// "io/ioutil"
-	// "log"
+	"io/ioutil"
+	"log"
 	"net"
 	"testing"
 	"time"
@@ -14,18 +14,18 @@ import (
 	"github.com/knakk/specs"
 )
 
-// func init() {
-// 	log.SetOutput(ioutil.Discard)
-// }
+func init() {
+	log.SetOutput(ioutil.Discard)
+}
 
-func initFakeConn(i int) (net.Conn, error) {
+func initFakeConn(i interface{}) (net.Conn, error) {
 	var (
 		c fakeTCPConn
 		b bytes.Buffer
 	)
 	bufferWriter := bufio.NewWriter(&b)
 	c.ReadWriter = bufio.NewReadWriter(
-		bufio.NewReader(bytes.NewBufferString(fmt.Sprintf("result #%v\r", i))),
+		bufio.NewReader(bytes.NewBufferString(fmt.Sprintf("result #%v\r", i.(int)))),
 		bufferWriter)
 	return c, nil
 }

@@ -12,13 +12,14 @@ type automat struct {
 }
 
 type config struct {
-	LogFile   string
-	LogToFile bool
-	SIPServer string
-	TCPServer string
-	TCPPort   string
-	HTTPPort  string
-	Automats  []automat
+	LogFile           string
+	LogToFile         bool
+	NumSIPConnections int
+	SIPServer         string
+	TCPServer         string
+	TCPPort           string
+	HTTPPort          string
+	Automats          []automat
 }
 
 func (c *config) fromFile(file string) error {

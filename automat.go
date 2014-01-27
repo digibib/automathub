@@ -61,45 +61,9 @@ func newAutomat(c net.Conn) *Automat {
 	}
 }
 
-func sipConnect(a *Automat) error {
-	// TODO send UI message if err (plus stop RFIDservice) ?
-	// TODO set timeouts to short value (1-2-3 sec?)
-	sipConn, err := net.Dial("tcp", cfg.SIPServer)
-	if err != nil {
-		log.Println("ERROR", err)
-		return err
-	}
-	a.SIPConn = sipConn
-	// send sip login message
-	_, err = a.SIPConn.Write([]byte(sipMsg93))
-	if err != nil {
-		log.Println("ERROR", err)
-		return err
-	}
-	log.Println("-> SIP", strings.Trim(sipMsg93, "\n\r"))
-
-	reader := bufio.NewReader(a.SIPConn)
-	msg, err := reader.ReadString('\r')
-	if err != nil {
-		log.Println("ERROR", err)
-		return err
-	}
-	// TODO return err if sip response is "940" (should be "941")
-	log.Println("<- SIP", strings.Trim(msg, "\n\r"))
-	return nil
-}
-
 // run the Automat state machine & message handler
 func (a *Automat) run() {
-	// Create SIP connection
-	for {
-		err := sipConnect(a)
-		if err == nil {
-			break
-		}
-	}
 
-	// run the state matchine
 	for {
 		select {
 		case msg := <-a.FromRFID:
@@ -115,10 +79,10 @@ func (a *Automat) run() {
 			var sipRes *UIResponse
 			switch a.State {
 			case uiCHECKIN:
-				sipRes, err = DoSIPCall(a, sipFormMsgCheckin(a.Dept, rfidMsg.Barcode), checkinParse)
+				sipRes, err = DoSIPCall(sipPool, sipFormMsgCheckin(a.Dept, rfidMsg.Barcode), checkinParse)
 				sipRes.Action = "CHECKIN"
 			case uiCHECKOUT:
-				sipRes, err = DoSIPCall(a, sipFormMsgCheckout(a.Patron, rfidMsg.Barcode), checkoutParse)
+				sipRes, err = DoSIPCall(sipPool, sipFormMsgCheckout(a.Patron, rfidMsg.Barcode), checkoutParse)
 				sipRes.Action = "CHECKOUT"
 			default:
 				log.Println("ERROR", "state: %+v | rfidmessage: %v", a.State, rfidMsg)
@@ -144,7 +108,7 @@ func (a *Automat) run() {
 			} else {
 				switch uiMsg.Action {
 				case "LOGIN":
-					authRes, err := DoSIPCall(a, sipFormMsgAuthenticate(a.Dept, uiMsg.Username, uiMsg.PIN), authParse)
+					authRes, err := DoSIPCall(sipPool, sipFormMsgAuthenticate(a.Dept, uiMsg.Username, uiMsg.PIN), authParse)
 					if err != nil {
 						a.ToUI <- ErrorResponse(err)
 						break

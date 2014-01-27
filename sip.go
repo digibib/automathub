@@ -13,7 +13,7 @@ const (
 	sipDateLayout = "20060102    150405"
 
 	// 93: Login (established SIP connection)
-	sipMsg93 = "9300CNstresstest1|COstresstest1|CPHUTL|\r"
+	sipMsg93 = "9300CNstresstest%d|COstresstest%d|CPHUTL|\r"
 
 	// 63: Patron information request
 	sipMsg63 = "63012%v          AO%s|AA%s|AC<terminalpassword>|AD%s|BP000|BQ9999|\r"
@@ -62,9 +62,13 @@ type parserFunc func(string) *UIResponse
 // DoSIPCall performs a SIP request with an automat's SIP TCP-connection. It
 // takes a SIP message as a string and a parser function to transform the SIP
 // response into a UIResponse.
-func DoSIPCall(a *Automat, req string, parser parserFunc) (*UIResponse, error) {
+func DoSIPCall(p *ConnPool, req string, parser parserFunc) (*UIResponse, error) {
+	// 0. Get connection from pool
+	c := p.Get()
+	defer p.Release(c)
+
 	// 1. Send the SIP request
-	_, err := a.SIPConn.Write([]byte(req))
+	_, err := c.Write([]byte(req))
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +76,7 @@ func DoSIPCall(a *Automat, req string, parser parserFunc) (*UIResponse, error) {
 	log.Println("-> SIP", strings.Trim(req, "\n\r"))
 
 	// 2. Read SIP response
-	reader := bufio.NewReader(a.SIPConn)
+	reader := bufio.NewReader(c)
 	resp, err := reader.ReadString('\r')
 	if err != nil {
 		return nil, err

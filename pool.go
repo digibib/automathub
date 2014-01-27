@@ -7,7 +7,6 @@ import (
 	"log"
 	"net"
 	"strings"
-	"time"
 )
 
 // ConnPool keeps a pool of <size> TCP connections
@@ -17,15 +16,15 @@ type ConnPool struct {
 }
 
 // InitFunction
-type InitFunction func(int) (net.Conn, error)
+type InitFunction func(interface{}) (net.Conn, error)
 
-func initSIPConn(i int) (net.Conn, error) {
+func initSIPConn(i interface{}) (net.Conn, error) {
 	conn, err := net.Dial("tcp", cfg.SIPServer)
 	if err != nil {
 		return nil, err
 	}
-	conn.SetWriteDeadline(time.Now().Add(time.Millisecond * 500))
-	out := fmt.Sprintf(sipMsg93, i, i)
+
+	out := fmt.Sprintf(sipMsg93, i.(int), i.(int))
 	_, err = conn.Write([]byte(out))
 	if err != nil {
 		log.Println("ERROR", err)
@@ -33,7 +32,6 @@ func initSIPConn(i int) (net.Conn, error) {
 	}
 	log.Println("-> SIP", strings.Trim(out, "\n\r"))
 
-	conn.SetReadDeadline(time.Now().Add(time.Millisecond * 500))
 	reader := bufio.NewReader(conn)
 	in, err := reader.ReadString('\r')
 	if err != nil {
