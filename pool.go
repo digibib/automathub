@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"strings"
+	"time"
 )
 
 // ConnPool keeps a pool of <size> TCP connections
@@ -23,7 +24,7 @@ func initSIPConn(i int) (net.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	conn.SetWriteDeadline(time.Now().Add(time.Millisecond * 500))
 	out := fmt.Sprintf(sipMsg93, i, i)
 	_, err = conn.Write([]byte(out))
 	if err != nil {
@@ -32,6 +33,7 @@ func initSIPConn(i int) (net.Conn, error) {
 	}
 	log.Println("-> SIP", strings.Trim(out, "\n\r"))
 
+	conn.SetReadDeadline(time.Now().Add(time.Millisecond * 500))
 	reader := bufio.NewReader(conn)
 	in, err := reader.ReadString('\r')
 	if err != nil {
@@ -50,27 +52,25 @@ func initSIPConn(i int) (net.Conn, error) {
 }
 
 // Init sets up <size> connections
-func (p *ConnPool) Init(size int, initFn InitFunction) error {
+func (p *ConnPool) Init(size int, initFn InitFunction) {
 	p.conn = make(chan net.Conn, size)
+	var count = 0
 	for i := 1; i <= size; i++ {
 		conn, err := initFn(i)
 		if err != nil {
-			return err
+			continue
 		}
+		count++
 		p.conn <- conn
 	}
-	p.size = size
-	return nil
+	p.size = count
 }
 
 // NewSIPCOnnPool creates a new pool with <size> SIP connections
-func NewSIPConnPool(size int) (*ConnPool, error) {
+func NewSIPConnPool(size int) *ConnPool {
 	p := &ConnPool{}
-	err := p.Init(size, initSIPConn)
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
+	p.Init(size, initSIPConn)
+	return p
 }
 
 // Get a connection from the pool

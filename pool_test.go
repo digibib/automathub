@@ -5,8 +5,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"log"
+	// "io/ioutil"
+	// "log"
 	"net"
 	"testing"
 	"time"
@@ -14,9 +14,9 @@ import (
 	"github.com/knakk/specs"
 )
 
-func init() {
-	log.SetOutput(ioutil.Discard)
-}
+// func init() {
+// 	log.SetOutput(ioutil.Discard)
+// }
 
 func initFakeConn(i int) (net.Conn, error) {
 	var (
@@ -34,8 +34,7 @@ func TestConnectionPool(t *testing.T) {
 	s := specs.New(t)
 
 	p := &ConnPool{}
-	err := p.Init(2, initFakeConn)
-	s.ExpectNil(err)
+	p.Init(2, initFakeConn)
 	s.Expect(2, p.size)
 
 	c := p.Get()
@@ -76,4 +75,5 @@ func TestConnectionPool(t *testing.T) {
 	default:
 		t.Fail()
 	}
+
 }
