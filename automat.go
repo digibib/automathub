@@ -84,6 +84,7 @@ func sipConnect(a *Automat) error {
 		log.Println("ERROR", err)
 		return err
 	}
+	// TODO return err if sip response is "940" (should be "941")
 	log.Println("<- SIP", strings.Trim(msg, "\n\r"))
 	return nil
 }
