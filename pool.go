@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+// TODO monitoring? what if a connection is lost? how to detect?
+
 // ConnPool keeps a pool of <size> TCP connections
 type ConnPool struct {
 	size int
