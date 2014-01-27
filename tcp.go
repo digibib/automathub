@@ -65,7 +65,6 @@ func (srv TCPServer) handleMessages() {
 		case automat := <-srv.addChan:
 			log.Printf("TCP [%v] automat connected\n", automat.RFIDconn.RemoteAddr())
 			srv.connections[automat.RFIDconn.RemoteAddr().String()] = automat
-			automat.ToRFID <- []byte("Welcome!\n")
 			stats.ClientsConnected.Inc(1)
 		case automat := <-srv.rmChan:
 			log.Printf("TCP [%v] automat disconnected\n", automat.RFIDconn.RemoteAddr())
