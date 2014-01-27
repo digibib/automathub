@@ -61,22 +61,20 @@ func newAutomat(c net.Conn) *Automat {
 	}
 }
 
-func sipConnect(a *Automat) {
-	// TODO send UI message if err (plus stop RFIDservice)
-	//      then try to reconnect
+func sipConnect(a *Automat) error {
+	// TODO send UI message if err (plus stop RFIDservice) ?
 	// TODO set timeouts to short value (1-2-3 sec?)
 	sipConn, err := net.Dial("tcp", cfg.SIPServer)
 	if err != nil {
 		log.Println("ERROR", err)
-		a.Quit <- true
-		return
+		return err
 	}
 	a.SIPConn = sipConn
 	// send sip login message
 	_, err = a.SIPConn.Write([]byte(sipMsg93))
 	if err != nil {
 		log.Println("ERROR", err)
-		a.Quit <- true
+		return err
 	}
 	log.Println("-> SIP", strings.Trim(sipMsg93, "\n\r"))
 
@@ -84,16 +82,21 @@ func sipConnect(a *Automat) {
 	msg, err := reader.ReadString('\r')
 	if err != nil {
 		log.Println("ERROR", err)
-		a.Quit <- true
+		return err
 	}
 	log.Println("<- SIP", strings.Trim(msg, "\n\r"))
+	return nil
 }
 
 // run the Automat state machine & message handler
 func (a *Automat) run() {
 	// Create SIP connection
-	// TODO do this synchronously, no reason to continue to state machine without sip connection
-	go sipConnect(a)
+	for {
+		err := sipConnect(a)
+		if err == nil {
+			break
+		}
+	}
 
 	// run the state matchine
 	for {
