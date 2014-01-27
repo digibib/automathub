@@ -30,52 +30,18 @@ func (c fakeTCPConn) SetDeadline(t time.Time) error      { return nil }
 func (c fakeTCPConn) SetReadDeadline(t time.Time) error  { return nil }
 func (c fakeTCPConn) SetWriteDeadline(t time.Time) error { return nil }
 
-func initFakeSIPConnA(i interface{}) (net.Conn, error) {
-	var (
-		c fakeTCPConn
-		b bytes.Buffer
-	)
-	bufferWriter := bufio.NewWriter(&b)
-	c.ReadWriter = bufio.NewReadWriter(
-		bufio.NewReader(bytes.NewBufferString("64              01220140123    093212000000030003000000000000AOHUTL|AApatronid1|AEFillip Wahl|BLY|CQY|CC5|PCPT|PIY|AFGreetings from Koha. |\r")),
-		bufferWriter)
-	return c, nil
-}
-
-func initFakeSIPConnB(i interface{}) (net.Conn, error) {
-	var (
-		c fakeTCPConn
-		b bytes.Buffer
-	)
-	bufferWriter := bufio.NewWriter(&b)
-	c.ReadWriter = bufio.NewReadWriter(
-		bufio.NewReader(bytes.NewBufferString("101YNN20140124    093621AOHUTL|AB03011143299001|AQhvmu|AJ316 salmer og sanger|AA1|CS783.4|\r")),
-		bufferWriter)
-	return c, nil
-}
-
-func initFakeSIPConnC(i interface{}) (net.Conn, error) {
-	var (
-		c fakeTCPConn
-		b bytes.Buffer
-	)
-	bufferWriter := bufio.NewWriter(&b)
-	c.ReadWriter = bufio.NewReadWriter(
-		bufio.NewReader(bytes.NewBufferString("121NNY20140124    110740AOHUTL|AA2|AB03011174511003|AJKrutt-Kim|AH20140221    235900|\r")),
-		bufferWriter)
-	return c, nil
-}
-
-func initFakeSIPConnD(i interface{}) (net.Conn, error) {
-	var (
-		c fakeTCPConn
-		b bytes.Buffer
-	)
-	bufferWriter := bufio.NewWriter(&b)
-	c.ReadWriter = bufio.NewReadWriter(
-		bufio.NewReader(bytes.NewBufferString("120NUN20140124    131049AOHUTL|AA2|AB1234|AJ|AH|AFInvalid Item|BLY|\r")),
-		bufferWriter)
-	return c, nil
+func fakeSIPResponse(s string) func(i interface{}) (net.Conn, error) {
+	return func(i interface{}) (net.Conn, error) {
+		var (
+			c fakeTCPConn
+			b bytes.Buffer
+		)
+		bufferWriter := bufio.NewWriter(&b)
+		c.ReadWriter = bufio.NewReadWriter(
+			bufio.NewReader(bytes.NewBufferString(s)),
+			bufferWriter)
+		return c, nil
+	}
 }
 
 func TestFieldPairs(t *testing.T) {
@@ -100,7 +66,7 @@ func TestFieldPairs(t *testing.T) {
 func TestSIPPatronAuthentication(t *testing.T) {
 	s := specs.New(t)
 	p := &ConnPool{}
-	p.Init(1, initFakeSIPConnA)
+	p.Init(1, fakeSIPResponse("64              01220140123    093212000000030003000000000000AOHUTL|AApatronid1|AEFillip Wahl|BLY|CQY|CC5|PCPT|PIY|AFGreetings from Koha. |\r"))
 
 	res, err := DoSIPCall(p, sipFormMsgAuthenticate("HUTL", "patronid1", "pass"), authParse)
 
@@ -112,7 +78,7 @@ func TestSIPPatronAuthentication(t *testing.T) {
 func TestSIPCheckin(t *testing.T) {
 	s := specs.New(t)
 	p := &ConnPool{}
-	p.Init(1, initFakeSIPConnB)
+	p.Init(1, fakeSIPResponse("101YNN20140124    093621AOHUTL|AB03011143299001|AQhvmu|AJ316 salmer og sanger|AA1|CS783.4|\r"))
 
 	res, err := DoSIPCall(p, sipFormMsgCheckin("HUTL", "03011143299001"), checkinParse)
 
@@ -125,7 +91,7 @@ func TestSIPCheckin(t *testing.T) {
 func TestSIPCheckout(t *testing.T) {
 	s := specs.New(t)
 	p := &ConnPool{}
-	p.Init(1, initFakeSIPConnC)
+	p.Init(1, fakeSIPResponse("121NNY20140124    110740AOHUTL|AA2|AB03011174511003|AJKrutt-Kim|AH20140221    235900|\r"))
 	res, err := DoSIPCall(p, sipFormMsgCheckout("2", "03011174511003"), checkoutParse)
 
 	s.ExpectNil(err)
@@ -134,7 +100,7 @@ func TestSIPCheckout(t *testing.T) {
 	s.Expect("utlånt til 21/02/2014", res.Item.Status)
 
 	p2 := &ConnPool{}
-	p2.Init(1, initFakeSIPConnD)
+	p2.Init(1, fakeSIPResponse("120NUN20140124    131049AOHUTL|AA2|AB1234|AJ|AH|AFInvalid Item|BLY|\r"))
 	res, err = DoSIPCall(p2, sipFormMsgCheckout("2", "1234"), checkoutParse)
 
 	s.ExpectNil(err)
