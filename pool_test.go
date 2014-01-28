@@ -5,8 +5,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"log"
+	// "io/ioutil"
+	// "log"
 	"net"
 	"testing"
 	"time"
@@ -14,9 +14,9 @@ import (
 	"github.com/knakk/specs"
 )
 
-func init() {
-	log.SetOutput(ioutil.Discard)
-}
+// func init() {
+// 	log.SetOutput(ioutil.Discard)
+// }
 
 func initFakeConn(i interface{}) (net.Conn, error) {
 	var (

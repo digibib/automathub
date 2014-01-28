@@ -4,6 +4,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -19,10 +20,10 @@ import (
 
 const (
 	// Number of simulated automats with RFIDService
-	NUMCLIENTS = 100
+	NUMCLIENTS = 50
 
 	// How long to run the integration test
-	DURATION = 200 * time.Second
+	DURATION = 20 * time.Second
 
 	// TCPServer addresss
 	HOST = "localhost:6666"
@@ -111,39 +112,53 @@ func (s *RFIDService) handleMessages() {
 	go s.writer()
 	for {
 		select {
-		case msg := <-s.incoming:
-			log.Println("incoming", string(msg))
+		case <-s.incoming:
+			//log.Println("incoming", string(msg))
 		}
 
 	}
 }
 
-func checkin(p *patron) {
+func login(p *patron, a *Automat) {
+	msg := fmt.Sprintf(`{"Action": "LOGIN", "Username":"%s", "Pin": "pass"}`, p.ID)
+	a.FromUI <- []byte(msg)
+}
+
+func logout(p *patron, a *Automat) {
+	msg := fmt.Sprintf(`{"Action": "LOGOUT", "Username":"%s"}`, p.ID)
+	a.FromUI <- []byte(msg)
+}
+
+func checkin(p *patron, a *Automat) {
 	p.Mutex.Lock()
 	defer p.Mutex.Unlock()
 	if len(p.Checkouts) == 0 {
-		log.Println("     patron has no checkouts")
+		//println("     patron has no checkouts")
 		return
 	}
 	var item string
 	for i := 0; i < rand.Intn(len(p.Checkouts)); i++ {
 		item, p.Checkouts = p.Checkouts[len(p.Checkouts)-1],
 			p.Checkouts[:len(p.Checkouts)-1]
-		log.Printf("     checkin item: %v\n", item)
+		msg := fmt.Sprintf(`{"Barcode": "%s"}`, item)
+		a.FromRFID <- []byte(msg)
+		println("     checkin item:", item)
 	}
 }
 
-func checkout(p *patron) {
+func checkout(p *patron, a *Automat) {
 	p.Mutex.Lock()
 	defer p.Mutex.Unlock()
 	for i := 0; i < rand.Intn(MAXCHEKCOUTS); i++ {
 		item := items[rand.Intn(len(items))]
 		p.Checkouts = append(p.Checkouts, item)
-		log.Printf("     checkout item: %v\n", item)
+		//println("     checkout item:", item)
+		msg := fmt.Sprintf(`{"Barcode": "%s"}`, item)
+		a.FromRFID <- []byte(msg)
 	}
 }
 
-func simulateAutomat() {
+func simulatePatronAutomatInteraction() {
 	s := newRFIDService()
 	err := s.connect()
 	if err != nil {
@@ -151,22 +166,32 @@ func simulateAutomat() {
 	}
 
 	go s.handleMessages()
-	a := s.conn.LocalAddr().String()
+	a := <-server.get(s.conn.LocalAddr().String())
+	go func() {
+		for _ = range a.ToUI {
+			// discarding
+			// log.Printf(string(msg))
+			//println("simulating send to UI")
+		}
+	}()
 
 	for {
 		action := rand.Intn(100)
 		switch {
 		case action < 40 && action > 0:
 			patron := patrons[rand.Intn(len(patrons))]
-			log.Printf("[%v] simulating checkin patron: %v\n", a, patron.ID)
-			checkin(patron)
+			login(patron, a)
+			a.FromUI <- []byte(`{"Action":"CHECKIN"}`)
+			checkin(patron, a)
+			logout(patron, a)
 		case action > 40 && action < 80:
 			patron := patrons[rand.Intn(len(patrons))]
-			log.Printf("[%v] simulating login patron: %v\n", a, patron.ID)
-			checkout(patron)
+			login(patron, a)
+			a.FromUI <- []byte(`{"Action":"CHECKOUT"}`)
+			checkout(patron, a)
+			logout(patron, a)
 		case action > 80:
-			log.Printf("[%v] simulating wait\n", a)
-			time.Sleep(time.Millisecond * time.Duration(rand.Intn(100)+1))
+			time.Sleep(time.Millisecond * time.Duration(rand.Intn(10000)+1))
 		}
 	}
 }
@@ -203,17 +228,27 @@ func init() {
 
 func TestAutomatPatronInteraction(t *testing.T) {
 	s := specs.New(t)
-	server := newTCPServer(&config{TCPPort: "6666"})
+	server = newTCPServer(&config{TCPPort: "6666"})
 	rand.Seed(time.Now().UnixNano())
-
+	if sipPool.size == 0 {
+		log.Fatal("No SIP connections")
+	}
 	go server.run()
 	s.Expect(0, len(server.connections))
 
 	for i := 0; i < NUMCLIENTS; i++ {
-		go simulateAutomat()
+		go simulatePatronAutomatInteraction()
 
 	}
 
 	time.Sleep(DURATION)
 	s.Expect(NUMCLIENTS, len(server.connections))
+
+	// TODO iterate over patrons and checkin all checked out books
+	for i := range patrons {
+		for _, j := range patrons[i].Checkouts {
+			_, _ = DoSIPCall(sipPool, sipFormMsgCheckin("HUTL", j), checkinParse)
+			println(i, j)
+		}
+	}
 }

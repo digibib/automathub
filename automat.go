@@ -68,14 +68,13 @@ func (a *Automat) run() {
 		select {
 		case msg := <-a.FromRFID:
 			log.Println("<- RFID:", strings.TrimRight(string(msg), "\n"))
-			// TODO work here tomorrow!!
 			rfidMsg, err := parseRFIDRequest(msg)
 			if err != nil {
 				log.Println("ERROR", err.Error())
 				// TODO respond to RFIDservise? and what?
 				break
 			}
-			log.Printf("DEBUG %+v", rfidMsg)
+			//log.Printf("DEBUG %+v", rfidMsg)
 			var sipRes *UIResponse
 			switch a.State {
 			case uiCHECKIN:
@@ -126,18 +125,18 @@ func (a *Automat) run() {
 					a.ToUI <- bRes
 				case "CHECKIN":
 					a.State = uiCHECKIN
-					a.ToRFID <- []byte("scan for tags (checkin)!\n")
+					a.ToRFID <- []byte(`{"Reader": "A", "Cmd": "SET-READER", "Data": "ON"}` + "\n")
 				case "CHECKOUT":
 					a.State = uiCHECKOUT
-					a.ToRFID <- []byte("scan for tags (checkout)!\n")
+					a.ToRFID <- []byte(`{"Reader": "A", "Cmd": "SET-READER", "Data": "ON"}` + "\n")
 				case "STATUS":
 					a.State = uiSTATUS
 				case "LOGOUT":
 					a.State = uiWAITING
 					a.Authenticated = false
 					a.Patron = ""
-					a.ToUI <- []byte(`{"action": "LOGOUT", "status": true}`)
-					a.ToRFID <- []byte("stop scannig for tags (logout)!\n")
+					a.ToUI <- []byte(`{"action": "LOGOUT", "status": true}` + "\n")
+					a.ToRFID <- []byte(`{"Reader": "A", "Cmd": "SET-READER", "Data": "OFF"}` + "\n")
 				}
 			}
 		case <-a.Quit:

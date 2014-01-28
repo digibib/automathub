@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"io"
-	"io/ioutil"
-	"log"
+	// "io/ioutil"
+	// "log"
 	"net"
 	"testing"
 	"time"
@@ -13,9 +13,9 @@ import (
 	"github.com/knakk/specs"
 )
 
-func init() {
-	log.SetOutput(ioutil.Discard)
-}
+// func init() {
+// 	log.SetOutput(ioutil.Discard)
+// }
 
 // fakeTCPConn is a mock of the net.Conn interface
 type fakeTCPConn struct {
