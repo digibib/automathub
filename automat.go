@@ -31,6 +31,12 @@ type Automat struct {
 	Dept          string // department (SIP: institution id)
 	Patron        string // patron username
 
+	// TODO
+	// Keep track of transactions, and send to RFIDservice for printout
+	// upon request. Clear on logout.
+	Checkins  []string
+	Checkouts []string
+
 	// SIP connection (via TCP)
 	SIPConn net.Conn
 
