@@ -337,7 +337,7 @@
     var UserInterface = React.createClass({
       getInitialState: function() {
         return {
-          ClientAddress: "10.172.2.1:2345",
+          ClientAddress: "{{.Client}}",
           Mode: "WAITING",
           PendingMode: "",
           Buttons: [{mode: "CHECKOUT", label: "UTLÅN", active: false, comment: ""},
