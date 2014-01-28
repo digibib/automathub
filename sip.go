@@ -111,7 +111,11 @@ func checkinParse(s string) *UIResponse {
 		ok = true
 	}
 	fields := pairFieldIDandValue(b)
-	status = fmt.Sprintf("registrert innlevert %s/%s/%s", a[12:14], a[10:12], a[6:10])
+	if a[2] == '0' {
+		status = fields["AF"]
+	} else {
+		status = fmt.Sprintf("registrert innlevert %s/%s/%s", a[12:14], a[10:12], a[6:10])
+	}
 	return &UIResponse{Item: item{OK: ok, Title: fields["AJ"], Status: status}}
 }
 
