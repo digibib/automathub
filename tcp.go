@@ -61,7 +61,7 @@ func (srv TCPServer) handleMessages() {
 	for {
 		select {
 		case <-ticker.C:
-			log.Println("TCP number of connections:", len(srv.connections))
+			//log.Println("TCP number of connections:", len(srv.connections))
 		case automat := <-srv.addChan:
 			log.Printf("TCP [%v] automat connected\n", automat.RFIDconn.RemoteAddr())
 			srv.connections[automat.RFIDconn.RemoteAddr().String()] = automat
