@@ -91,6 +91,7 @@
     .item-list button { background: green; color: #fff; border:0; width:100px; height:1.5em;}
     .slider { overflow: hidden; max-height: 400px; transition: all .3s cubic-bezier(0, 1, 0.5, 1);}
     .closed.slider { max-height: 0; overflow: hidden;}
+    .item-failed { background-color:#faa !important;}
 
   </style>
 </head>
@@ -228,9 +229,29 @@
 
     var CheckoutList = React.createClass({
       render: function() {
+        var items = this.props.checkouts.map(function(i) {
+          return (
+            <tr className={i.OK ? "" : "item-failed"}>
+              <td>{i.OK ? "✔" : "✘"}</td>
+              <td>{i.Title}</td>
+              <td>{i.Status}</td>
+            </tr>
+            );
+        });
         return (
           <div className={this.props.mode==="CHECKOUT" ? "clearfix listBox" : "hidden"}>
-            Utlån
+            <table className="item-list">
+              <thead>
+                <tr>
+                  <th>OK?</th>
+                  <th>materiale</th>
+                  <th>status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items}
+              </tbody>
+            </table>
           </div>
           );
       }
@@ -238,9 +259,29 @@
 
     var CheckinList = React.createClass({
       render: function() {
+        var items = this.props.checkins.map(function(i) {
+          return (
+            <tr className={i.OK ? "" : "item-failed"}>
+              <td>{i.OK ? "✔" : "✘"}</td>
+              <td>{i.Title}</td>
+              <td>{i.Status}</td>
+            </tr>
+            );
+        });
         return (
           <div className={this.props.mode==="CHECKIN" ? "clearfix listBox" : "hidden"}>
-            innleveringer
+            <table className="item-list">
+              <thead>
+                <tr>
+                  <th>OK?</th>
+                  <th>materiale</th>
+                  <th>status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items}
+              </tbody>
+            </table>
           </div>
           );
       }
@@ -349,10 +390,14 @@
                 }
                 break;
               case "CHECKIN":
-                console.log("thats a checkin");
+                checkins = uiThis.state.Checkins;
+                checkins.push(r.Item);
+                uiThis.setState({Checkins: checkins});
                 break;
               case "CHECKOUT":
-                console.log("thats a checkout");
+                checkouts = uiThis.state.Checkouts;
+                checkouts.push(r.Item);
+                uiThis.setState({Checkouts: checkouts});
                 break;
             }
           };
